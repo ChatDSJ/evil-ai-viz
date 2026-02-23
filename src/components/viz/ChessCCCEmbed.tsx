@@ -1,29 +1,22 @@
 import { useEffect, useState, useRef } from "react";
+// Note: useRef still needed by CCCFallback's canvas
 
 /**
  * Embeds chess.com/computer-chess-championship in a filtered iframe.
  * Falls back to a simulated CCC display if iframe is blocked.
  */
 export function ChessCCCEmbed() {
-  const [loaded, setLoaded] = useState(false);
-  const [iframeBlocked, setIframeBlocked] = useState(false);
+  // chess.com blocks iframe embedding via X-Frame-Options, and the browser's
+  // onLoad still fires on blocked frames, so detection is unreliable.
+  // Always use the themed fallback instead.
   const [visible, setVisible] = useState(false);
   const [glitch, setGlitch] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Delayed reveal
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), 2000);
     return () => clearTimeout(timer);
   }, []);
-
-  // Check if iframe loaded (chess.com might block with X-Frame-Options)
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (!loaded) setIframeBlocked(true);
-    }, 8000);
-    return () => clearTimeout(timeout);
-  }, [loaded]);
 
   // Periodic glitch
   useEffect(() => {
@@ -51,27 +44,8 @@ export function ChessCCCEmbed() {
         transition: "opacity 2s ease",
       }}
     >
-      {/* CCC iframe or fallback */}
-      {!iframeBlocked ? (
-        <iframe
-          ref={iframeRef}
-          src="https://www.chess.com/computer-chess-championship"
-          title="Computer Chess Championship"
-          onLoad={() => setLoaded(true)}
-          onError={() => setIframeBlocked(true)}
-          style={{
-            width: "200%",
-            height: "200%",
-            border: "none",
-            transform: "scale(0.5)",
-            transformOrigin: "top left",
-            filter: "saturate(0.3) brightness(0.6) hue-rotate(100deg) contrast(1.2)",
-            pointerEvents: "none",
-          }}
-        />
-      ) : (
-        <CCCFallback />
-      )}
+      {/* Simulated CCC display (chess.com blocks iframe embedding) */}
+      <CCCFallback />
 
       {/* Overlay filter — dark edges + scan lines */}
       <div

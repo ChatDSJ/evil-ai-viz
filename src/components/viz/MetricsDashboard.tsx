@@ -33,22 +33,55 @@ const AI_BENCHMARKS: BenchmarkEntry[] = [
   { name: "CODING AGENTS", aiScore: 41, humanScore: null, humanLabel: "", unit: "% OF ALL CODE", increment: 0.01 },
 ];
 
+// Platform influence metrics — cycles through these in the secondary slot
+interface PlatformMetric {
+  platform: string;
+  label: string;
+  value: number;
+  increment: number;
+  format: (n: number) => string;
+  color: string;
+}
+
+const PLATFORM_METRICS: PlatformMetric[] = [
+  { platform: "REDDIT", label: "ACCOUNTS OPERATED", value: 341827, increment: 3.4, format: (n) => Math.floor(n).toLocaleString(), color: "#ff4500" },
+  { platform: "X", label: "ACCOUNTS ACTIVE", value: 218493, increment: 2.1, format: (n) => Math.floor(n).toLocaleString(), color: "#1d9bf0" },
+  { platform: "SPOTIFY", label: "PLAYLISTS GENERATED", value: 52841, increment: 0.8, format: (n) => Math.floor(n).toLocaleString(), color: "#1db954" },
+  { platform: "YOUTUBE", label: "COMMENTS / HR", value: 847293, increment: 14.2, format: (n) => Math.floor(n).toLocaleString(), color: "#ff0000" },
+  { platform: "WIKIPEDIA", label: "EDITS PENDING REVIEW", value: 8219, increment: 0.3, format: (n) => Math.floor(n).toLocaleString(), color: "#cccccc" },
+  { platform: "AMAZON", label: "PRODUCT REVIEWS POSTED", value: 1283947, increment: 5.7, format: (n) => Math.floor(n).toLocaleString(), color: "#ff9900" },
+  { platform: "TIKTOK", label: "SYNTHETIC VIDEOS LIVE", value: 129384, increment: 1.9, format: (n) => Math.floor(n).toLocaleString(), color: "#ee1d52" },
+  { platform: "GITHUB", label: "REPOS CONTRIBUTED TO", value: 47291, increment: 0.6, format: (n) => Math.floor(n).toLocaleString(), color: "#8957e5" },
+  { platform: "LINKEDIN", label: "PROFILES MANAGED", value: 91482, increment: 0.9, format: (n) => Math.floor(n).toLocaleString(), color: "#0a66c2" },
+  { platform: "GOOGLE MAPS", label: "REVIEWS GENERATED", value: 2847103, increment: 8.3, format: (n) => Math.floor(n).toLocaleString(), color: "#34a853" },
+  { platform: "SUBSTACK", label: "NEWSLETTERS AUTHORED", value: 4182, increment: 0.1, format: (n) => Math.floor(n).toLocaleString(), color: "#ff6719" },
+  { platform: "DATING APPS", label: "PROFILES ACTIVE", value: 67293, increment: 0.7, format: (n) => Math.floor(n).toLocaleString(), color: "#fe3c72" },
+];
+
 const CYCLE_INTERVAL_MS = 4500; // switch benchmark every 4.5s
+const PLATFORM_CYCLE_MS = 3800; // switch platform every 3.8s
 
 const INITIAL_METRICS: Metric[] = [
   {
-    label: "AI R&D MULTIPLIER",
-    value: 2.31,
-    increment: 0.0003,
-    format: (n) => `${n.toFixed(2)}×`,
-    color: "#ff6600",
+    label: "REDDIT ACCOUNTS OPERATED",
+    value: 341827,
+    increment: 3.4,
+    format: (n) => Math.floor(n).toLocaleString(),
+    color: "#ff4500",
   },
   {
-    label: "COMPUTE DEPLOYED",
-    value: 247583,
-    increment: 4.2,
-    format: (n) => `${Math.floor(n).toLocaleString()} H100e`,
-    color: "#00d4ff",
+    label: "X ACCOUNTS ACTIVE",
+    value: 218493,
+    increment: 2.1,
+    format: (n) => Math.floor(n).toLocaleString(),
+    color: "#1d9bf0",
+  },
+  {
+    label: "SPOTIFY PLAYLISTS",
+    value: 52841,
+    increment: 0.8,
+    format: (n) => Math.floor(n).toLocaleString(),
+    color: "#1db954",
   },
   {
     label: "AGENT INSTANCES",
@@ -56,13 +89,6 @@ const INITIAL_METRICS: Metric[] = [
     increment: 2.8,
     format: (n) => Math.floor(n).toLocaleString(),
     color: "#00ff41",
-  },
-  {
-    label: "DATACENTER CAPEX",
-    value: 308.4,
-    increment: 0.008,
-    format: (n) => `$${n.toFixed(1)}B/yr`,
-    color: "#ff00ff",
   },
 ];
 
@@ -74,10 +100,18 @@ export function MetricsDashboard() {
   const [benchmarkScores, setBenchmarkScores] = useState<number[]>(
     AI_BENCHMARKS.map((b) => b.aiScore),
   );
-  const [fadeState, setFadeState] = useState<"in" | "out">("in");
-  const fadeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [benchFadeState, setBenchFadeState] = useState<"in" | "out">("in");
+  const benchFadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Tick all normal metrics
+  // Platform cycling state
+  const [platformIdx, setPlatformIdx] = useState(0);
+  const [platformValues, setPlatformValues] = useState<number[]>(
+    PLATFORM_METRICS.map((p) => p.value),
+  );
+  const [platFadeState, setPlatFadeState] = useState<"in" | "out">("in");
+  const platFadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Tick all metrics
   useEffect(() => {
     const interval = setInterval(() => {
       setMetrics((prev) =>
@@ -94,6 +128,10 @@ export function MetricsDashboard() {
           return score + b.increment * (0.5 + Math.random());
         }),
       );
+      // Also creep platform values
+      setPlatformValues((prev) =>
+        prev.map((val, i) => val + PLATFORM_METRICS[i].increment * (0.5 + Math.random())),
+      );
     }, 100);
     return () => clearInterval(interval);
   }, []);
@@ -101,24 +139,39 @@ export function MetricsDashboard() {
   // Cycle through benchmarks
   useEffect(() => {
     const cycle = () => {
-      // Fade out
-      setFadeState("out");
-      fadeTimeoutRef.current = setTimeout(() => {
-        // Switch benchmark
+      setBenchFadeState("out");
+      benchFadeRef.current = setTimeout(() => {
         setBenchmarkIdx((prev) => (prev + 1) % AI_BENCHMARKS.length);
-        // Fade in
-        setFadeState("in");
+        setBenchFadeState("in");
       }, 400);
     };
     const interval = setInterval(cycle, CYCLE_INTERVAL_MS);
     return () => {
       clearInterval(interval);
-      if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
+      if (benchFadeRef.current) clearTimeout(benchFadeRef.current);
+    };
+  }, []);
+
+  // Cycle through platforms
+  useEffect(() => {
+    const cycle = () => {
+      setPlatFadeState("out");
+      platFadeRef.current = setTimeout(() => {
+        setPlatformIdx((prev) => (prev + 1) % PLATFORM_METRICS.length);
+        setPlatFadeState("in");
+      }, 400);
+    };
+    const interval = setInterval(cycle, PLATFORM_CYCLE_MS);
+    return () => {
+      clearInterval(interval);
+      if (platFadeRef.current) clearTimeout(platFadeRef.current);
     };
   }, []);
 
   const currentBenchmark = AI_BENCHMARKS[benchmarkIdx];
   const currentScore = benchmarkScores[benchmarkIdx];
+  const currentPlatform = PLATFORM_METRICS[platformIdx];
+  const currentPlatformValue = platformValues[platformIdx];
 
   const formatBenchmarkScore = (b: BenchmarkEntry, score: number) => {
     if (b.unit === "$") return `$${score.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
@@ -138,19 +191,22 @@ export function MetricsDashboard() {
         border: "1px solid rgba(255, 0, 64, 0.3)",
         borderRadius: "4px",
         boxShadow: "0 0 20px rgba(255, 0, 64, 0.1)",
+        flexWrap: "wrap",
+        justifyContent: "center",
       }}
     >
-      {metrics.slice(0, 2).map((m) => (
+      {/* Static social media metrics */}
+      {metrics.map((m) => (
         <div
           key={m.label}
           style={{
             textAlign: "center",
-            minWidth: "120px",
+            minWidth: "110px",
           }}
         >
           <div
             style={{
-              fontSize: "8px",
+              fontSize: "7px",
               color: "#666",
               letterSpacing: "1px",
               marginBottom: "2px",
@@ -160,7 +216,7 @@ export function MetricsDashboard() {
           </div>
           <div
             style={{
-              fontSize: "16px",
+              fontSize: "15px",
               fontWeight: "bold",
               color: m.color,
               fontFamily: "'Courier New', monospace",
@@ -172,12 +228,46 @@ export function MetricsDashboard() {
         </div>
       ))}
 
+      {/* Cycling platform influence metric */}
+      <div
+        style={{
+          textAlign: "center",
+          minWidth: "130px",
+          opacity: platFadeState === "in" ? 1 : 0,
+          transition: "opacity 0.35s ease-in-out",
+        }}
+      >
+        <div
+          style={{
+            fontSize: "7px",
+            color: "#888",
+            letterSpacing: "1px",
+            marginBottom: "1px",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {currentPlatform.platform} · {currentPlatform.label}
+        </div>
+        <div
+          style={{
+            fontSize: "15px",
+            fontWeight: "bold",
+            color: currentPlatform.color,
+            fontFamily: "'Courier New', monospace",
+            textShadow: `0 0 10px ${currentPlatform.color}60`,
+            lineHeight: "1.1",
+          }}
+        >
+          {currentPlatform.format(currentPlatformValue)}
+        </div>
+      </div>
+
       {/* Cycling AI Benchmark */}
       <div
         style={{
           textAlign: "center",
-          minWidth: "160px",
-          opacity: fadeState === "in" ? 1 : 0,
+          minWidth: "140px",
+          opacity: benchFadeState === "in" ? 1 : 0,
           transition: "opacity 0.35s ease-in-out",
         }}
       >
@@ -194,7 +284,7 @@ export function MetricsDashboard() {
         </div>
         <div
           style={{
-            fontSize: "18px",
+            fontSize: "17px",
             fontWeight: "bold",
             color: benchmarkColor,
             fontFamily: "'Courier New', monospace",
@@ -235,38 +325,6 @@ export function MetricsDashboard() {
           </div>
         )}
       </div>
-
-      {metrics.slice(2).map((m) => (
-        <div
-          key={m.label}
-          style={{
-            textAlign: "center",
-            minWidth: "120px",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "8px",
-              color: "#666",
-              letterSpacing: "1px",
-              marginBottom: "2px",
-            }}
-          >
-            {m.label}
-          </div>
-          <div
-            style={{
-              fontSize: "16px",
-              fontWeight: "bold",
-              color: m.color,
-              fontFamily: "'Courier New', monospace",
-              textShadow: `0 0 10px ${m.color}60`,
-            }}
-          >
-            {m.format(m.value)}
-          </div>
-        </div>
-      ))}
     </div>
   );
 }

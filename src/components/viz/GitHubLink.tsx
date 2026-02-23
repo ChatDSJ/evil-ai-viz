@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const GITHUB_REPO_URL = "https://github.com/dsjoerg/evil-ai-viz";
+const GITHUB_REPO_URL = "https://github.com/ChatDSJ/evil-ai-viz";
 
 export function GitHubLink() {
   const [visible, setVisible] = useState(true);

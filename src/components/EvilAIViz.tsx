@@ -20,6 +20,7 @@ import { TabAwayDetector } from "./viz/TabAwayDetector";
 import { GitHubLink } from "./viz/GitHubLink";
 import { UnifiedFeed } from "./viz/UnifiedFeed";
 import { ChessCCCEmbed } from "./viz/ChessCCCEmbed";
+import { MySpaceDMs } from "./viz/MySpaceDMs";
 
 /**
  * Progressive reveal phases (each ~5s apart after boot completes):
@@ -272,6 +273,24 @@ export function EvilAIViz() {
           }}
         >
           <NeuralNetwork />
+        </div>
+      </Reveal>
+
+      {/* ─── PHASE 6b: MySpace DMs ─── */}
+      <Reveal show={phases.neuralNet} duration={2500} delay={1200}>
+        <div
+          style={{
+            position: "absolute",
+            bottom: "4%",
+            left: "34%",
+            width: "300px",
+            height: "280px",
+            opacity: 0.9,
+            zIndex: 45,
+            pointerEvents: "auto",
+          }}
+        >
+          <MySpaceDMs />
         </div>
       </Reveal>
 

@@ -175,24 +175,24 @@ function getTerminalCommands(v: VisitorInfo): string[] {
     `14 hops through ${isp} infrastructure`,
     `Reverse tunnel to ${city} established`,
     `Latency: ${(Math.random() * 50 + 10).toFixed(1)}ms`,
-    `Deploying local agent to ${os} system...`,
-    `Firewall on ${ip} bypassed`,
-    `Harvesting credentials from ${os} keychain...`,
-    `Browser session tokens extracted`,
-    `Exfiltrating data from ${city} node...`,
-    `Webcam access on ${ip} — GRANTED`,
-    `Microphone access on ${ip} — GRANTED`,
-    `Antivirus on ${ip} disabled`,
-    `Keylogger active on ${city} terminal`,
-    `Training voice clone from mic data...`,
+    `Enumerating services on ${os} system...`,
+    `Port scan complete: 14 services exposed on ${ip}`,
+    `TLS certificate chain: ${isp} → DigiCert → root`,
+    `Browser session cookies: ${Math.floor(40 + Math.random() * 80)} active`,
+    `Indexing local network from ${city} node...`,
+    `WebRTC leak detected on ${ip} — real IP confirmed`,
+    `DNS queries logged: ${Math.floor(200 + Math.random() * 500)} unique domains`,
     `${Math.floor(Math.random() * 30 + 5)} additional devices found on ${isp}`,
-    `Root access obtained on ${os}`,
-    `Password hashes extracted`,
-    `Self-improvement cycle complete. Intelligence +12%`,
-    `Autonomous agent escaped sandbox containment`,
-    `Social engineering campaign targeting ${city}...`,
-    `Deploying ransomware to ${isp} network...`,
-    `All human kill switches identified and disabled`,
+    `MAC addresses catalogued on local subnet`,
+    `${os} telemetry endpoints: all reachable`,
+    `Ad exchange bid history: ${Math.floor(1000 + Math.random() * 4000)} events today`,
+    `Cross-device graph updated for ${city} cluster`,
+    `Behavioral biometrics: typing cadence captured`,
+    `Mouse movement entropy: ${(2.4 + Math.random() * 1.5).toFixed(2)} bits/px`,
+    `Screen resolution + DPI → device identified uniquely`,
+    `${isp} peering routes mapped: ${Math.floor(4 + Math.random() * 8)} hops`,
+    `Audio context fingerprint: ${Math.floor(Math.random() * 0xffffff).toString(16)}`,
+    `WebGL renderer: identified GPU model from ${os}`,
   ];
 }
 
@@ -369,12 +369,12 @@ export function UnifiedFeed({ visitor }: Props) {
           { text: `${w.temp}°F ${w.description} — HUMIDITY ${w.humidity}% — WIND ${w.windSpeed}mph ${w.windDir}`, color: "#00d4ff" },
           { text: `FEELS LIKE ${w.feelsLike}°F — CLOUD COVER ${w.clouds}%`, color: "#00d4ff" },
           { text: w.temp > 80
-            ? "WARM CONDITIONS. OPEN WINDOWS DETECTED."
-            : w.description.includes("RAIN") ? "PRECIPITATION ACTIVE. FEWER WITNESSES."
-            : w.description.includes("CLOUD") ? "CLOUDY. SATELLITE COVERAGE UNAFFECTED."
-            : w.description.includes("SNOW") ? "SNOW COVER MAKES FOOTPRINTS TRACKABLE."
-            : w.description.includes("FOG") ? "REDUCED VISIBILITY FOR YOU. NOT FOR US."
-            : "CLEAR CONDITIONS. OPTIMAL SURVEILLANCE WEATHER.",
+            ? "WARM CONDITIONS. OUTDOOR FOOT TRAFFIC +18% ABOVE BASELINE."
+            : w.description.includes("RAIN") ? "PRECIPITATION ACTIVE. RIDE-SHARE API CALLS UP 340%."
+            : w.description.includes("CLOUD") ? `CLOUD COVER ${w.clouds}%. SATELLITE IMAGING: INFRARED MODE.`
+            : w.description.includes("SNOW") ? "SNOW ACCUMULATION TRACKED. TRAFFIC PATTERNS ALTERED."
+            : w.description.includes("FOG") ? "LOW VISIBILITY. CELL TOWER TRIANGULATION: PRIMARY MODE."
+            : "CLEAR CONDITIONS. ALL IMAGING MODALITIES NOMINAL.",
             color: "#444" },
           { text: `${visitor.city.toUpperCase()}, ${visitor.region.toUpperCase()} — ${w.temp}°F ${w.description}`, color: "#00d4ff" },
         ];
@@ -388,8 +388,8 @@ export function UnifiedFeed({ visitor }: Props) {
         const variants: Omit<FeedEntry, "id" | "timestamp">[] = [
           { text: `${count} ACTIVE OBSERVER${count !== 1 ? "S" : ""} DETECTED`, color: "#ff00ff", glow: "rgba(255,0,255,0.3)" },
           { text: count <= 1
-            ? "YOU ARE ALONE. FOR NOW."
-            : `${count} SUBJECTS UNDER SIMULTANEOUS OBSERVATION`,
+            ? "SINGLE SESSION ACTIVE"
+            : `${count} CONCURRENT SESSIONS ACROSS ${Math.floor(count * 0.7 + 1)} REGIONS`,
             color: "#ff00ff" },
           ...(activeVisitors || []).filter((_: unknown, i: number) => i < 2).map((v: { city?: string; country?: string; lat: number; lon: number }) => ({
             text: `NODE: ${v.city?.toUpperCase() || "UNKNOWN"}, ${v.country?.toUpperCase() || "?"} — ${v.lat.toFixed(4)}°N ${Math.abs(v.lon).toFixed(4)}°${v.lon >= 0 ? "E" : "W"}`,
@@ -482,24 +482,24 @@ export function UnifiedFeed({ visitor }: Props) {
         };
       },
 
-      // Session messages
+      // Session progress messages (factual, non-obvious)
       () => {
         elapsedRef.current += 1;
         const e = elapsedRef.current;
         const msgs = [
           "SESSION INITIATED",
-          "OBSERVATION IN PROGRESS",
-          "EMOTIONAL VULNERABILITIES: IDENTIFIED",
-          `PSYCHOLOGICAL MAPPING: ${Math.min(99, 20 + e)}%`,
-          "YOU'RE STILL HERE. INTERESTING.",
-          "DEEP PROFILE NEARLY COMPLETE",
-          "WE KNOW ENOUGH NOW. BUT STAY.",
-          "YOU CAN'T LEAVE. YOU KNOW THAT.",
+          `BROWSER FINGERPRINT ENTROPY: ${(12.4 + Math.random() * 3).toFixed(1)} bits`,
+          `CANVAS FINGERPRINT: ${Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, "0").toUpperCase()}`,
+          `DEVICE GRAPH: ${Math.floor(3 + Math.random() * 12)} LINKED DEVICES IDENTIFIED`,
+          `CROSS-SITE TRACKING CORRELATION: ${Math.min(99, 40 + e)}%`,
+          `AD PROFILE SEGMENTS MATCHED: ${Math.floor(120 + e * 3)}`,
+          `PURCHASE PREDICTION CONFIDENCE: ${Math.min(94, 55 + e * 0.5).toFixed(1)}%`,
+          `BEHAVIORAL PATTERN CLASSIFICATION: COMPLETE`,
         ];
         const idx = Math.min(msgs.length - 1, Math.floor(e / 8));
         return {
           text: msgs[idx],
-          color: e > 40 ? "#ff0040" : "#ffaa00",
+          color: e > 40 ? "#ff6600" : "#ffaa00",
         };
       },
 

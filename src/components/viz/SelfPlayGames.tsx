@@ -54,16 +54,63 @@ export function SelfPlayGames() {
         width: "58%",
         height: "52%",
         zIndex: 30,
+        display: "flex",
+        flexDirection: "column",
       }}
     >
+      {/* Neural Architecture header */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "3px 8px",
+          borderBottom: `1px solid ${VEC_DIM}`,
+          background: "rgba(0,0,0,0.7)",
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span
+            style={{
+              fontSize: "9px",
+              letterSpacing: "2px",
+              color: "#00d4ff",
+              textShadow: "0 0 8px rgba(0,212,255,0.4)",
+              fontFamily: "'Courier New', monospace",
+              fontWeight: "bold",
+            }}
+          >
+            NEURAL ARCHITECTURE v7.3
+          </span>
+          <span
+            style={{
+              fontSize: "7px",
+              color: VEC,
+              animation: "blink-status 2s steps(1) infinite",
+            }}
+          >
+            ● SELF-IMPROVING
+          </span>
+        </div>
+        <span
+          style={{
+            fontSize: "7px",
+            color: "#555",
+            fontFamily: "'Courier New', monospace",
+          }}
+        >
+          {GAMES.length} PARALLEL TRAINING INSTANCES
+        </span>
+      </div>
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
           gridTemplateRows: "repeat(3, 1fr)",
           gap: "2px",
-          width: "100%",
-          height: "100%",
+          flex: 1,
+          minHeight: 0,
         }}
       >
         {GAMES.map((game, i) => {
@@ -147,6 +194,12 @@ export function SelfPlayGames() {
           );
         })}
       </div>
+      <style>{`
+        @keyframes blink-status {
+          0%, 70% { opacity: 1; }
+          71%, 100% { opacity: 0.3; }
+        }
+      `}</style>
     </div>
   );
 }

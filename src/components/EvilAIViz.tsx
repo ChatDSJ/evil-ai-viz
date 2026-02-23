@@ -3,7 +3,7 @@ import { useVisitorInfo } from "../hooks/useVisitorInfo";
 import { BootSequence } from "./viz/BootSequence";
 import { MatrixRain } from "./viz/MatrixRain";
 import { WorldMap } from "./viz/WorldMap";
-import { NeuralNetwork } from "./viz/NeuralNetwork";
+// NeuralNetwork replaced by MySpaceConversations
 import { CodeFragments } from "./viz/CodeFragments";
 import { WireframeGlobe } from "./viz/WireframeGlobe";
 import { GlitchOverlay } from "./viz/GlitchOverlay";
@@ -21,6 +21,7 @@ import { TabAwayDetector } from "./viz/TabAwayDetector";
 import { UnifiedFeed } from "./viz/UnifiedFeed";
 import { ChessCCCEmbed } from "./viz/ChessCCCEmbed";
 import { SelfPlayGames } from "./viz/SelfPlayGames";
+import { MySpaceConversations } from "./viz/MySpaceConversations";
 
 /**
  * Progressive reveal phases (each ~5s apart after boot completes):
@@ -255,11 +256,12 @@ export function EvilAIViz() {
           <div
             style={{
               position: "absolute",
-              bottom: "8%",
+              bottom: "38%",
               right: "2%",
-              width: "280px",
-              height: "240px",
+              width: "360px",
+              height: "300px",
               opacity: 0.9,
+              zIndex: 35,
             }}
           >
             <UserLocationMap visitor={visitor} />
@@ -267,18 +269,20 @@ export function EvilAIViz() {
         </Reveal>
       )}
 
+      {/* ─── MySpace Conversations (replaces standalone neural net) ─── */}
       <Reveal show={phases.neuralNet} duration={2000} delay={800}>
         <div
           style={{
             position: "absolute",
-            bottom: "8%",
-            right: "26%",
-            width: "280px",
-            height: "200px",
-            opacity: 0.8,
+            top: "3%",
+            right: "20%",
+            width: "300px",
+            height: "340px",
+            opacity: 0.9,
+            zIndex: 35,
           }}
         >
-          <NeuralNetwork />
+          <MySpaceConversations />
         </div>
       </Reveal>
 

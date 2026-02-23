@@ -52,6 +52,8 @@ export function AudioPlayer() {
   const [expanded, setExpanded] = useState(false);
   const [visible, setVisible] = useState(true);
 
+  const autoStartedRef = useRef(false);
+
   // Clean up fade interval on unmount
   useEffect(() => {
     return () => {
@@ -81,6 +83,41 @@ export function AudioPlayer() {
       }
     }, FADE_STEP_MS);
   }, []);
+
+  // Auto-start on first user interaction (browsers require a gesture before playing audio)
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      if (autoStartedRef.current) return;
+      const audio = audioRef.current;
+      if (!audio) return;
+
+      autoStartedRef.current = true;
+      audio.volume = 0;
+      audio.play().then(() => {
+        setPlaying(true);
+        startFadeIn();
+      }).catch(() => {
+        // Browser still blocked it — user can click the play button manually
+        autoStartedRef.current = false;
+      });
+
+      // Remove all listeners after first trigger
+      for (const evt of INTERACTION_EVENTS) {
+        document.removeEventListener(evt, handleFirstInteraction, { capture: true });
+      }
+    };
+
+    const INTERACTION_EVENTS = ["click", "keydown", "touchstart", "scroll", "pointerdown"] as const;
+    for (const evt of INTERACTION_EVENTS) {
+      document.addEventListener(evt, handleFirstInteraction, { capture: true, once: false });
+    }
+
+    return () => {
+      for (const evt of INTERACTION_EVENTS) {
+        document.removeEventListener(evt, handleFirstInteraction, { capture: true });
+      }
+    };
+  }, [startFadeIn]);
 
   // Auto-hide
   useEffect(() => {

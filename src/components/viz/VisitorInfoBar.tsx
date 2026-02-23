@@ -63,37 +63,6 @@ export function VisitorInfoBar({ visitor }: Props) {
         animation: "fadeSlideDown 0.5s ease",
       }}
     >
-      {/* Blinking "IDENTIFIED" prefix */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          borderRight: "1px solid rgba(255, 0, 64, 0.3)",
-          paddingRight: "12px",
-        }}
-      >
-        <div
-          style={{
-            width: "6px",
-            height: "6px",
-            borderRadius: "50%",
-            background: "#ff0040",
-            animation: "blink-dot 1s infinite",
-          }}
-        />
-        <span
-          style={{
-            fontSize: "9px",
-            color: "#ff0040",
-            letterSpacing: "2px",
-            fontWeight: "bold",
-          }}
-        >
-          VISITOR IDENTIFIED
-        </span>
-      </div>
-
       {items.map((item, i) => (
         <div
           key={item.label}

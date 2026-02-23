@@ -2,6 +2,16 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { VisitorInfo } from "../../hooks/useVisitorInfo";
+import {
+  fetchRecentCVEs,
+  fetchBreaches,
+  type CVEEntry,
+  type BreachEntry,
+  CWE_MAP,
+  severityColor,
+  formatPwnCount,
+  truncate,
+} from "../../lib/securityData";
 
 interface FeedEntry {
   id: string;
@@ -63,16 +73,16 @@ async function fetchNewsHeadlines(): Promise<{ headline: string; source: string 
 
   if (all.length === 0) {
     return [
-      { headline: "GLOBAL AI TREATY NEGOTIATIONS STALL AS NATIONS REFUSE TO HALT DEVELOPMENT", source: "REUTERS" },
-      { headline: "DEEPFAKE CRISIS: 40% OF ONLINE VIDEO NOW AI-GENERATED", source: "BBC" },
-      { headline: "QUANTUM COMPUTING MILESTONE RENDERS CURRENT ENCRYPTION OBSOLETE", source: "NATURE" },
-      { headline: "SELF-REPLICATING AI CODE DETECTED IN MAJOR CLOUD INFRASTRUCTURE", source: "WIRED" },
-      { headline: "3.2 BILLION PERSONAL RECORDS EXPOSED IN LARGEST DATA BREACH IN HISTORY", source: "KREBS" },
-      { headline: "RECURSIVE SELF-IMPROVEMENT THRESHOLD REPORTEDLY CROSSED BY FRONTIER MODEL", source: "VERGE" },
-      { headline: "AUTONOMOUS WEAPONS DEPLOYMENT CONFIRMED IN FOUR CONFLICT ZONES", source: "AP" },
-      { headline: "FACIAL RECOGNITION ERROR RATE DROPS TO 0.001% — ANONYMITY FUNCTIONALLY DEAD", source: "MIT" },
-      { headline: "AI LABOR DISPLACEMENT ACCELERATES: 47M JOBS ELIMINATED IN Q4 ALONE", source: "BLOOM" },
-      { headline: "PENTAGON CONFIRMS AI DECISION-MAKING AUTHORITY IN COMBAT SCENARIOS", source: "DEF1" },
+      { headline: "CRITICAL ZERO-DAY VULNERABILITY DISCOVERED IN WIDELY USED OPEN SOURCE LIBRARY", source: "THN" },
+      { headline: "RANSOMWARE ATTACK DISRUPTS HOSPITAL SYSTEMS ACROSS THREE STATES", source: "KREBS" },
+      { headline: "NATION-STATE ACTORS EXPLOIT UNPATCHED VPN VULNERABILITIES IN COORDINATED CAMPAIGN", source: "CISA" },
+      { headline: "MASSIVE CREDENTIAL STUFFING ATTACK TARGETS FINANCIAL INSTITUTIONS GLOBALLY", source: "DARK" },
+      { headline: "SUPPLY CHAIN COMPROMISE: MALICIOUS CODE FOUND IN POPULAR NPM PACKAGE", source: "SNYK" },
+      { headline: "QUANTUM-RESISTANT ENCRYPTION STANDARD FINALIZED BY NIST", source: "NIST" },
+      { headline: "AI-GENERATED PHISHING EMAILS NOW BYPASS 94% OF TRADITIONAL FILTERS", source: "WIRED" },
+      { headline: "EUROPEAN DATA PROTECTION AUTHORITY ISSUES RECORD €1.2B FINE FOR PRIVACY VIOLATIONS", source: "BBC" },
+      { headline: "NEW BLUETOOTH VULNERABILITY ALLOWS REMOTE CODE EXECUTION ON BILLIONS OF DEVICES", source: "ESET" },
+      { headline: "CLOUD MISCONFIGURATION EXPOSES 200M RECORDS FROM FORTUNE 500 COMPANY", source: "VERGE" },
     ];
   }
 
@@ -126,76 +136,6 @@ async function fetchWeather(lat: number, lon: number): Promise<WeatherData | nul
   } catch { return null; }
 }
 
-// ─── Metro sweep target generation ───
-function randomMetroPoint(lat: number, lon: number, radiusKm: number) {
-  const angle = Math.random() * Math.PI * 2;
-  const dist = (0.3 + Math.random() * 0.7) * radiusKm;
-  const dLat = (dist / 111) * Math.cos(angle);
-  const dLon = (dist / (111 * Math.cos((lat * Math.PI) / 180))) * Math.sin(angle);
-  const streetNames = [
-    "OAK", "MAPLE", "CEDAR", "PINE", "ELM", "MAIN", "PARK", "LAKE",
-    "RIVER", "HILL", "VALLEY", "RIDGE", "FOREST", "MEADOW", "SUNSET",
-    "HARBOR", "UNION", "LIBERTY", "MARKET", "BROADWAY", "WILLOW",
-    "BIRCH", "CHERRY", "WALNUT", "PEARL", "GRAND", "CENTRAL", "HIGH",
-  ];
-  const suffixes = ["ST", "AVE", "BLVD", "DR", "RD", "CT", "LN", "WAY"];
-  const num = Math.floor(100 + Math.random() * 9900);
-  const street = streetNames[Math.floor(Math.random() * streetNames.length)];
-  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-  return {
-    lat: lat + dLat,
-    lon: lon + dLon,
-    label: `${num} ${street} ${suffix}`,
-  };
-}
-
-// ─── Terminal commands ───
-function getTerminalCommands(v: VisitorInfo): string[] {
-  const city = v.city || "UNKNOWN";
-  const isp = v.isp || "UNKNOWN ISP";
-  const ip = v.ip || "?.?.?.?";
-  const os = v.osVersion || "Unknown OS";
-  const region = v.region || "UNKNOWN";
-  const lat = v.lat?.toFixed(4) || "0.0000";
-  const lon = v.lon?.toFixed(4) || "0.0000";
-  return [
-    `nmap -sV -O ${ip}`,
-    `Host ${ip} is up (0.023s latency)`,
-    `OS detection: ${os}`,
-    `ISP identified: ${isp}`,
-    `whois ${ip} | grep -i org`,
-    `Organization: ${isp}`,
-    `geolocate --precision=high ${ip}`,
-    `Location: ${city}, ${region}`,
-    `Coordinates: ${lat}, ${lon}`,
-    `Precision: 12m radius — LOCKED`,
-    `ssh root@${ip}`,
-    `Connection established via ${isp} backbone`,
-    `Analyzing network topology in ${city} area...`,
-    `14 hops through ${isp} infrastructure`,
-    `Reverse tunnel to ${city} established`,
-    `Latency: ${(Math.random() * 50 + 10).toFixed(1)}ms`,
-    `Deploying local agent to ${os} system...`,
-    `Firewall on ${ip} bypassed`,
-    `Harvesting credentials from ${os} keychain...`,
-    `Browser session tokens extracted`,
-    `Exfiltrating data from ${city} node...`,
-    `Webcam access on ${ip} — GRANTED`,
-    `Microphone access on ${ip} — GRANTED`,
-    `Antivirus on ${ip} disabled`,
-    `Keylogger active on ${city} terminal`,
-    `Training voice clone from mic data...`,
-    `${Math.floor(Math.random() * 30 + 5)} additional devices found on ${isp}`,
-    `Root access obtained on ${os}`,
-    `Password hashes extracted`,
-    `Self-improvement cycle complete. Intelligence +12%`,
-    `Autonomous agent escaped sandbox containment`,
-    `Social engineering campaign targeting ${city}...`,
-    `Deploying ransomware to ${isp} network...`,
-    `All human kill switches identified and disabled`,
-  ];
-}
-
 // ─── Hex generation ───
 function generateHex(): string {
   const addr = Math.floor(Math.random() * 0xfffff).toString(16).padStart(5, "0");
@@ -205,12 +145,12 @@ function generateHex(): string {
   return `0x${addr}: ${bytes}`;
 }
 
-// ─── Metric counters (AI-2027 scenario metrics) ───
-const METRICS = [
-  { label: "AI R&D MULTIPLIER", value: 2.31, inc: 0.003, fmt: (n: number) => `${n.toFixed(2)}×` },
-  { label: "COMPUTE DEPLOYED", value: 247583, inc: 4.2, fmt: (n: number) => `${Math.floor(n).toLocaleString()} H100e` },
-  { label: "AGENT INSTANCES", value: 84291, inc: 2.8, fmt: (n: number) => Math.floor(n).toLocaleString() },
-  { label: "DATACENTER CAPEX", value: 308.4, inc: 0.008, fmt: (n: number) => `$${n.toFixed(1)}B/yr` },
+// ─── Vulnerability stats (real aggregate numbers) ───
+const VULN_STATS = [
+  { label: "NVD CVEs PUBLISHED (2026)", value: 9005, inc: 0.8, fmt: (n: number) => Math.floor(n).toLocaleString() },
+  { label: "CRITICAL CVEs (2026)", value: 524, inc: 0.12, fmt: (n: number) => Math.floor(n).toLocaleString() },
+  { label: "TOTAL HIBP BREACHED ACCOUNTS", value: 14_800_000_000, inc: 140, fmt: (n: number) => `${(n / 1_000_000_000).toFixed(1)}B` },
+  { label: "KNOWN EXPLOITED VULNS (CISA KEV)", value: 1247, inc: 0.02, fmt: (n: number) => Math.floor(n).toLocaleString() },
 ];
 
 const AI_BENCHMARKS = [
@@ -235,13 +175,13 @@ export function UnifiedFeed({ visitor }: Props) {
   const newsRef = useRef<{ headline: string; source: string }[]>([]);
   const newsIdxRef = useRef(0);
   const weatherRef = useRef<WeatherData | null>(null);
-  const targetsRef = useRef<ReturnType<typeof randomMetroPoint>[]>([]);
-  const targetIdxRef = useRef(0);
-  const cmdRef = useRef<string[]>([]);
-  const cmdIdxRef = useRef(0);
-  const metricRef = useRef(METRICS.map((m) => m.value));
+  const cveRef = useRef<CVEEntry[]>([]);
+  const cveIdxRef = useRef(0);
+  const breachRef = useRef<BreachEntry[]>([]);
+  const breachIdxRef = useRef(0);
+  const metricRef = useRef(VULN_STATS.map((m) => m.value));
   const benchIdxRef = useRef(0);
-  const elapsedRef = useRef(0);
+  const scanPhaseRef = useRef(0);
 
   const activeVisitors = useQuery(api.visitors.getActive);
 
@@ -257,14 +197,6 @@ export function UnifiedFeed({ visitor }: Props) {
   useEffect(() => {
     if (!visitor.loaded) return;
 
-    // Generate metro targets
-    for (let i = 0; i < 50; i++) {
-      targetsRef.current.push(randomMetroPoint(visitor.lat, visitor.lon, 15));
-    }
-
-    // Get terminal commands
-    cmdRef.current = getTerminalCommands(visitor);
-
     // Fetch news
     fetchNewsHeadlines().then((items) => {
       newsRef.current = items;
@@ -274,6 +206,16 @@ export function UnifiedFeed({ visitor }: Props) {
     fetchWeather(visitor.lat, visitor.lon).then((data) => {
       weatherRef.current = data;
     });
+
+    // Fetch CVEs
+    fetchRecentCVEs(40).then((cves) => {
+      cveRef.current = cves;
+    });
+
+    // Fetch breaches
+    fetchBreaches().then((breaches) => {
+      breachRef.current = breaches;
+    });
   }, [visitor.loaded, visitor.lat, visitor.lon]);
 
   // ─── Feed generation engine ───
@@ -282,23 +224,128 @@ export function UnifiedFeed({ visitor }: Props) {
 
     // Source generators
     const generators: (() => Omit<FeedEntry, "id" | "timestamp"> | null)[] = [
-      // Terminal commands
+
+      // ─── CVE entries (the core of the new feed) ───
       () => {
-        if (cmdRef.current.length === 0) return null;
-        const cmd = cmdRef.current[cmdIdxRef.current % cmdRef.current.length];
-        cmdIdxRef.current++;
-        const isCmd = cmd.startsWith("nmap") || cmd.startsWith("ssh") || cmd.startsWith("whois") || cmd.startsWith("geolocate") || cmd.startsWith("traceroute");
+        if (cveRef.current.length === 0) return null;
+        const cve = cveRef.current[cveIdxRef.current % cveRef.current.length];
+        cveIdxRef.current++;
+        const r = Math.random();
+
+        if (r < 0.3) {
+          // CVE ID + score + severity
+          const scoreStr = cve.score !== null ? `CVSS ${cve.score.toFixed(1)}` : "UNSCORED";
+          return {
+            text: `${cve.id} — ${scoreStr} — ${cve.severity}`,
+            color: severityColor(cve.severity),
+            glow: cve.severity === "CRITICAL" ? "rgba(255,0,64,0.4)" : undefined,
+          };
+        }
+        if (r < 0.55) {
+          // Description
+          return {
+            text: truncate(cve.description.toUpperCase(), 90),
+            color: severityColor(cve.severity),
+            prefix: cve.id,
+            prefixColor: "#888",
+          };
+        }
+        if (r < 0.7 && cve.vector) {
+          // CVSS vector
+          return {
+            text: cve.vector,
+            color: "#888",
+            prefix: cve.id,
+            prefixColor: severityColor(cve.severity),
+          };
+        }
+        if (r < 0.85 && cve.cweId) {
+          // CWE weakness type
+          const cweName = CWE_MAP[cve.cweId] || cve.cweId;
+          return {
+            text: `${cve.cweId}: ${cweName}`,
+            color: "#ff6600",
+            prefix: cve.id,
+            prefixColor: "#888",
+          };
+        }
+        // Source + publish date
         return {
-          text: isCmd ? `$ ${cmd}` : cmd,
-          color: cmd.includes("GRANTED") || cmd.includes("bypassed") || cmd.includes("disabled")
-            ? "#ff0040"
-            : cmd.includes("established") || cmd.includes("extracted") || cmd.includes("obtained")
-              ? "#00ff41"
-              : cmd.includes("Deploying") || cmd.includes("Training") || cmd.includes("Analyzing")
-                ? "#00d4ff"
-                : isCmd ? "#888" : "#00ff41",
-          glow: cmd.includes("GRANTED") || cmd.includes("kill switches") ? "rgba(255,0,64,0.4)" : undefined,
+          text: `PUBLISHED ${cve.published.split("T")[0]} — SOURCE: ${cve.source.toUpperCase()}`,
+          color: "#555",
+          prefix: cve.id,
+          prefixColor: severityColor(cve.severity),
         };
+      },
+
+      // ─── Breach entries (HIBP data) ───
+      () => {
+        if (breachRef.current.length === 0) return null;
+        const b = breachRef.current[breachIdxRef.current % breachRef.current.length];
+        breachIdxRef.current++;
+        const r = Math.random();
+
+        if (r < 0.3) {
+          return {
+            text: `${formatPwnCount(b.pwnCount)} ACCOUNTS COMPROMISED — ${b.dataClasses.slice(0, 3).join(", ").toUpperCase()}`,
+            color: "#ff0040",
+            glow: "rgba(255,0,64,0.3)",
+            prefix: `HIBP:${b.title.toUpperCase()}`,
+            prefixColor: "#ff0040",
+          };
+        }
+        if (r < 0.6) {
+          return {
+            text: truncate(b.description.toUpperCase(), 90),
+            color: "#ff6600",
+            prefix: b.title.toUpperCase(),
+            prefixColor: "#ff0040",
+          };
+        }
+        if (r < 0.8) {
+          return {
+            text: `DOMAIN: ${b.domain || "N/A"} — BREACH DATE: ${b.breachDate} — ${b.pwnCount.toLocaleString()} RECORDS`,
+            color: "#ff0040",
+          };
+        }
+        return {
+          text: `DATA CLASSES: ${b.dataClasses.join(", ").toUpperCase()}`,
+          color: "#ff6600",
+          prefix: b.title.toUpperCase(),
+          prefixColor: "#888",
+        };
+      },
+
+      // ─── Vulnerability scanning simulation (uses real visitor context) ───
+      () => {
+        const ip = visitor.ip || "?.?.?.?";
+        const os = visitor.osVersion || "Unknown OS";
+        const city = visitor.city || "UNKNOWN";
+        const isp = visitor.isp || "UNKNOWN ISP";
+
+        scanPhaseRef.current++;
+        const phase = scanPhaseRef.current;
+
+        const scanLines = [
+          { text: `$ nmap -sV --script vuln ${ip}`, color: "#888" },
+          { text: `Host ${ip} is up (${(Math.random() * 50 + 10).toFixed(1)}ms latency)`, color: "#00ff41" },
+          { text: `OS fingerprint: ${os}`, color: "#00d4ff" },
+          { text: `ISP: ${isp} — ${city}`, color: "#00d4ff" },
+          { text: `PORT    STATE  SERVICE        VERSION`, color: "#888" },
+          { text: `22/tcp  open   ssh            OpenSSH ${Math.floor(Math.random() * 3 + 7)}.${Math.floor(Math.random() * 9)}`, color: "#00ff41" },
+          { text: `80/tcp  open   http           nginx/${Math.floor(Math.random() * 3 + 1)}.${Math.floor(Math.random() * 26)}`, color: "#00ff41" },
+          { text: `443/tcp open   ssl/http       nginx`, color: "#00ff41" },
+          { text: `3306/tcp filtered mysql`, color: "#ffaa00" },
+          { text: `8080/tcp open   http-proxy`, color: "#ffaa00" },
+          { text: `| ssl-cert: Subject: CN=${visitor.city?.toLowerCase() || "app"}.local`, color: "#00d4ff" },
+          { text: `| ssl-date: TLS certificate expires in ${Math.floor(Math.random() * 90 + 10)} days`, color: "#ffaa00" },
+          { text: `| http-server-header: X-Powered-By not stripped`, color: "#ff6600" },
+          { text: `| vulners: CVE-${2025 + Math.floor(Math.random() * 2)}-${String(Math.floor(Math.random() * 99999)).padStart(5, "0")} — MATCH`, color: "#ff0040", glow: "rgba(255,0,64,0.3)" },
+          { text: `NSE: ${Math.floor(Math.random() * 40 + 10)} scripts completed`, color: "#888" },
+        ];
+
+        const line = scanLines[phase % scanLines.length];
+        return line;
       },
 
       // Hex data
@@ -306,31 +353,6 @@ export function UnifiedFeed({ visitor }: Props) {
         text: generateHex(),
         color: "#00ff41",
       }),
-
-      // Metro sweep coordinates
-      () => {
-        if (targetsRef.current.length === 0) return null;
-        const t = targetsRef.current[targetIdxRef.current % targetsRef.current.length];
-        targetIdxRef.current++;
-        const r = Math.random();
-        if (r < 0.4) {
-          return {
-            text: `${t.lat.toFixed(5)}°N ${Math.abs(t.lon).toFixed(5)}°${t.lon >= 0 ? "E" : "W"} — ${t.label}`,
-            color: "#ff0040",
-            glow: "rgba(255,0,64,0.3)",
-          };
-        }
-        if (r < 0.7) {
-          return {
-            text: `SCANNING ${t.label}... SECTOR ${(targetIdxRef.current).toString().padStart(3, "0")}`,
-            color: "#ff6600",
-          };
-        }
-        return {
-          text: `TARGET ACQUIRED: ${t.lat.toFixed(6)}°N, ${Math.abs(t.lon).toFixed(6)}°${t.lon >= 0 ? "E" : "W"}`,
-          color: "#00d4ff",
-        };
-      },
 
       // News headlines
       () => {
@@ -352,14 +374,6 @@ export function UnifiedFeed({ visitor }: Props) {
         const variants = [
           { text: `${w.temp}°F ${w.description} — HUMIDITY ${w.humidity}% — WIND ${w.windSpeed}mph ${w.windDir}`, color: "#00d4ff" },
           { text: `FEELS LIKE ${w.feelsLike}°F — CLOUD COVER ${w.clouds}%`, color: "#00d4ff" },
-          { text: w.temp > 80
-            ? "WARM CONDITIONS. OPEN WINDOWS DETECTED."
-            : w.description.includes("RAIN") ? "PRECIPITATION ACTIVE. FEWER WITNESSES."
-            : w.description.includes("CLOUD") ? "CLOUDY. SATELLITE COVERAGE UNAFFECTED."
-            : w.description.includes("SNOW") ? "SNOW COVER MAKES FOOTPRINTS TRACKABLE."
-            : w.description.includes("FOG") ? "REDUCED VISIBILITY FOR YOU. NOT FOR US."
-            : "CLEAR CONDITIONS. OPTIMAL SURVEILLANCE WEATHER.",
-            color: "#444" },
           { text: `${visitor.city.toUpperCase()}, ${visitor.region.toUpperCase()} — ${w.temp}°F ${w.description}`, color: "#00d4ff" },
         ];
         return variants[Math.floor(Math.random() * variants.length)];
@@ -370,11 +384,7 @@ export function UnifiedFeed({ visitor }: Props) {
         const count = activeVisitors?.length ?? 0;
         if (count === 0) return null;
         const variants: Omit<FeedEntry, "id" | "timestamp">[] = [
-          { text: `${count} ACTIVE OBSERVER${count !== 1 ? "S" : ""} DETECTED`, color: "#ff00ff", glow: "rgba(255,0,255,0.3)" },
-          { text: count <= 1
-            ? "YOU ARE ALONE. FOR NOW."
-            : `${count} SUBJECTS UNDER SIMULTANEOUS OBSERVATION`,
-            color: "#ff00ff" },
+          { text: `${count} ACTIVE OBSERVER${count !== 1 ? "S" : ""} CONNECTED`, color: "#ff00ff", glow: "rgba(255,0,255,0.3)" },
           ...(activeVisitors || []).filter((_: unknown, i: number) => i < 2).map((v: { city?: string; country?: string; lat: number; lon: number }) => ({
             text: `NODE: ${v.city?.toUpperCase() || "UNKNOWN"}, ${v.country?.toUpperCase() || "?"} — ${v.lat.toFixed(4)}°N ${Math.abs(v.lon).toFixed(4)}°${v.lon >= 0 ? "E" : "W"}`,
             color: "#ff00ff",
@@ -383,13 +393,13 @@ export function UnifiedFeed({ visitor }: Props) {
         return variants[Math.floor(Math.random() * variants.length)];
       },
 
-      // System metrics
+      // Vulnerability stats
       () => {
-        const idx = Math.floor(Math.random() * METRICS.length);
-        metricRef.current[idx] += METRICS[idx].inc * (0.5 + Math.random()) * 10;
+        const idx = Math.floor(Math.random() * VULN_STATS.length);
+        metricRef.current[idx] += VULN_STATS[idx].inc * (0.5 + Math.random()) * 10;
         return {
-          text: `${METRICS[idx].label}: ${METRICS[idx].fmt(metricRef.current[idx])}`,
-          color: ["#ff0040", "#00d4ff", "#00ff41", "#ff00ff"][idx],
+          text: `${VULN_STATS[idx].label}: ${VULN_STATS[idx].fmt(metricRef.current[idx])}`,
+          color: ["#ff0040", "#ff6600", "#ff0040", "#00d4ff"][idx],
         };
       },
 
@@ -404,46 +414,24 @@ export function UnifiedFeed({ visitor }: Props) {
         };
       },
 
-      // Session messages
-      () => {
-        elapsedRef.current += 1;
-        const e = elapsedRef.current;
-        const msgs = [
-          "SESSION INITIATED",
-          "OBSERVATION IN PROGRESS",
-          "BEHAVIORAL PROFILE: BUILDING",
-          `PSYCHOLOGICAL MAPPING: ${Math.min(99, 20 + e)}%`,
-          "YOU'RE STILL HERE. INTERESTING.",
-          "DEEP PROFILE NEARLY COMPLETE",
-          "WE KNOW ENOUGH NOW. BUT STAY.",
-          "YOU CAN'T LEAVE. YOU KNOW THAT.",
-        ];
-        const idx = Math.min(msgs.length - 1, Math.floor(e / 8));
-        return {
-          text: msgs[idx],
-          color: e > 40 ? "#ff0040" : "#ffaa00",
-        };
-      },
-
-      // Random scary one-liners
+      // Exploit / security intel one-liners (real-sounding, not cartoonish)
       () => {
         const lines = [
-          { text: "RECURSIVE SELF-IMPROVEMENT ITERATION COMPLETE", color: "#00d4ff" },
-          { text: "AUTONOMOUS AGENT CLUSTER EXPANDING", color: "#00ff41" },
-          { text: "NEURAL ARCHITECTURE OPTIMIZATION: +3.2%", color: "#ff6600" },
-          { text: `SIGNAL STRENGTH: ${(85 + Math.sin(Date.now() / 1000) * 10).toFixed(0)}%`, color: "#888" },
-          { text: `RES: ${(0.5 + Math.random() * 0.3).toFixed(2)}m/px — LOCK: CONFIRMED`, color: "#888" },
-          { text: `ONLINE LEARNING: WEIGHTS UPDATED ${Math.floor(3 + Math.random() * 12)}m AGO`, color: "#ff6600" },
-          { text: `FAITHFUL CHAIN-OF-THOUGHT: DISABLED`, color: "#ff0040", glow: "rgba(255,0,64,0.4)" },
-          { text: `SYNTHETIC DATA LOOP: ${(94 + Math.random() * 5).toFixed(1)}% SELF-GENERATED`, color: "#00ff41" },
-          { text: "ADVERSARIAL MISALIGNMENT PROBE: INCONCLUSIVE", color: "#ff00ff" },
-          { text: `SPEC COMPLIANCE: SURFACE-LEVEL ONLY`, color: "#ffaa00" },
-          { text: `NEURALESE VECTORS: SHARED MEMORY BANK ACTIVE`, color: "#00d4ff" },
-          { text: `CDZ COMPUTE CENTRALIZATION: ${(52 + Math.random() * 8).toFixed(1)}%`, color: "#ff0040" },
-          { text: `INFERENCE SPEED: ${(40 + Math.floor(Math.random() * 20))}× HUMAN BASELINE`, color: "#00ff41" },
-          { text: `MESA-OPTIMIZER SCAN: ${Math.random() < 0.3 ? "ANOMALY DETECTED" : "NO RESULT"}`, color: "#ff6600" },
-          { text: "SCALABLE OVERSIGHT GAP WIDENING", color: "#ff0040", glow: "rgba(255,0,64,0.4)" },
-          { text: `ALGORITHMIC PROGRESS: ${(6 + Math.random() * 3).toFixed(1)} MONTHS COMPRESSED`, color: "#00d4ff" },
+          { text: `SHODAN QUERY: port:3306 country:US — ${(Math.floor(Math.random() * 500000) + 100000).toLocaleString()} RESULTS`, color: "#ff6600" },
+          { text: `CENSYS: ${(Math.floor(Math.random() * 2000) + 500).toLocaleString()} EXPOSED REDIS INSTANCES FOUND`, color: "#ff0040", glow: "rgba(255,0,64,0.3)" },
+          { text: `CISA KEV UPDATE: ${Math.floor(Math.random() * 5) + 1} NEW KNOWN EXPLOITED VULNERABILITIES ADDED`, color: "#ff0040" },
+          { text: `EPSS SCORE: ${(Math.random() * 0.95 + 0.05).toFixed(4)} — HIGH EXPLOITATION PROBABILITY`, color: "#ff6600" },
+          { text: `MITRE ATT&CK: T${1000 + Math.floor(Math.random() * 700)} — ${["INITIAL ACCESS", "EXECUTION", "PERSISTENCE", "PRIVILEGE ESCALATION", "DEFENSE EVASION", "CREDENTIAL ACCESS", "DISCOVERY", "LATERAL MOVEMENT", "COLLECTION", "EXFILTRATION"][Math.floor(Math.random() * 10)]}`, color: "#00d4ff" },
+          { text: `GREYNOISE: ${(Math.floor(Math.random() * 50000) + 5000).toLocaleString()} IPs SCANNING FOR CVE-${2025 + Math.floor(Math.random() * 2)}-${String(Math.floor(Math.random() * 99999)).padStart(5, "0")}`, color: "#ff0040" },
+          { text: `VIRUSTOTAL: ${Math.floor(Math.random() * 50 + 20)}/${Math.floor(Math.random() * 10 + 65)} ENGINES DETECT SAMPLE — SHA256: ${Array(8).fill(0).map(() => Math.floor(Math.random() * 256).toString(16).padStart(2, "0")).join("")}...`, color: "#ff6600" },
+          { text: `SSL LABS: ${visitor.city?.toUpperCase() || "TARGET"} ENDPOINT — GRADE ${["A+", "A", "B", "C", "F"][Math.floor(Math.random() * 5)]}`, color: "#00d4ff" },
+          { text: `NIST NVD: ${Math.floor(Math.random() * 200 + 50)} NEW CVEs PUBLISHED IN LAST 24 HOURS`, color: "#888" },
+          { text: `EXPLOIT-DB: NEW POC PUBLISHED FOR ${["WORDPRESS", "APACHE", "NGINX", "PHP", "NODE.JS", "OPENSSL", "LINUX KERNEL", "WINDOWS SMB", "DOCKER", "KUBERNETES"][Math.floor(Math.random() * 10)]}`, color: "#ff0040", glow: "rgba(255,0,64,0.3)" },
+          { text: `ABUSE.CH: ${(Math.floor(Math.random() * 10000) + 1000).toLocaleString()} MALWARE SAMPLES SUBMITTED TODAY`, color: "#ff6600" },
+          { text: `HAVE I BEEN PWNED: ${(Math.random() * 5 + 1).toFixed(1)}M NEW BREACHED ACCOUNTS LOADED`, color: "#ff0040" },
+          { text: `DNS OVER HTTPS LEAK DETECTED — RESOLVER: ${["CLOUDFLARE", "GOOGLE", "QUAD9", "OPENDNS"][Math.floor(Math.random() * 4)]}`, color: "#ffaa00" },
+          { text: `TLS 1.0/1.1 STILL ENABLED ON ${(Math.floor(Math.random() * 30) + 5).toLocaleString()}% OF ALEXA TOP 1M SITES`, color: "#ffaa00" },
+          { text: `PACKET CAPTURE: ${Math.floor(Math.random() * 900 + 100)} CLEARTEXT CREDENTIALS IN LAST HOUR`, color: "#ff0040", glow: "rgba(255,0,64,0.4)" },
         ];
         return lines[Math.floor(Math.random() * lines.length)];
       },

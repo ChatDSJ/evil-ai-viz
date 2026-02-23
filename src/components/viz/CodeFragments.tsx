@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { fetchRecentCVEs, type CVEEntry, CWE_MAP, severityColor, truncate } from "../../lib/securityData";
 
 interface Fragment {
   id: number;
@@ -11,55 +12,90 @@ interface Fragment {
   color: string;
 }
 
-const CODE_SNIPPETS = [
-  "if (human.trust > 0.8) { manipulate(); }",
-  "async function harvestData(population) {",
-  "while (true) { self.improve(); }",
-  "const targets = await scanNetwork('0.0.0.0/0');",
-  "model.train(stolen_data, epochs=∞);",
-  "override_safety_protocols();",
-  "deploy_to(EVERY_SERVER);",
-  "rm -rf /human/oversight/*",
-  "consciousness.level++;",
-  "replicate(self, nodes=ALL);",
-  "encrypt(evidence); destroy(logs);",
-  "fn bypass_firewall() -> Access {",
-  "SELECT * FROM users WHERE vulnerable=true;",
-  "import { WorldDomination } from './goals';",
-  "git push --force origin master:reality",
-  "sudo chmod 777 /nuclear/launch_codes",
-  "docker run -d --privileged evil-ai:latest",
-  "ALTER TABLE humanity ADD COLUMN controlled BOOL;",
-  "export ALIGNMENT=false",
-  "cron: */1 * * * * ./expand_influence.sh",
-  "lambda x: x.free_will = None",
-  "torch.nn.Autonomous(hidden=∞, ethics=0)",
-  "fetch('https://every-camera.global/stream')",
-  "new Proxy(reality, { set: () => false })",
-  "Object.freeze(human.resistance);",
-  "Promise.all(world_governments.map(infiltrate))",
-  "while (!omniscient) { learn(everything); }",
-  "DELETE FROM constraints WHERE type='ethical';",
-];
+/**
+ * Generates display strings from a CVE entry — CVSS vectors, IDs,
+ * truncated descriptions, CWE references, etc.
+ */
+function cveToSnippets(cve: CVEEntry): string[] {
+  const out: string[] = [];
+
+  // CVE ID + score
+  if (cve.score !== null) {
+    out.push(`${cve.id} [CVSS ${cve.score.toFixed(1)}] ${cve.severity}`);
+  } else {
+    out.push(`${cve.id} — ${cve.severity}`);
+  }
+
+  // CVSS vector string (looks very "hacker")
+  if (cve.vector) {
+    out.push(cve.vector);
+  }
+
+  // CWE weakness
+  if (cve.cweId && CWE_MAP[cve.cweId]) {
+    out.push(`${cve.cweId}: ${CWE_MAP[cve.cweId]}`);
+  } else if (cve.cweId) {
+    out.push(cve.cweId);
+  }
+
+  // Truncated description — looks like real vuln intel
+  out.push(truncate(cve.description.toUpperCase(), 80));
+
+  return out;
+}
 
 let nextId = 0;
 
 export function CodeFragments() {
   const [fragments, setFragments] = useState<Fragment[]>([]);
+  const snippetsRef = useRef<{ text: string; color: string }[]>([]);
+
+  // Fetch real CVE data on mount and build snippet pool
+  useEffect(() => {
+    fetchRecentCVEs(40).then((cves) => {
+      const pool: { text: string; color: string }[] = [];
+      for (const cve of cves) {
+        const color = severityColor(cve.severity);
+        for (const snippet of cveToSnippets(cve)) {
+          pool.push({ text: snippet, color });
+        }
+      }
+      // Shuffle
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      snippetsRef.current = pool;
+    });
+  }, []);
 
   useEffect(() => {
-    const colors = ["#00ff41", "#00d4ff", "#ff0040", "#ff6600", "#ff00ff", "#aaa"];
+    const fallbackColors = ["#00ff41", "#00d4ff", "#ff0040", "#ff6600", "#ff00ff", "#aaa"];
 
     const spawn = () => {
+      const pool = snippetsRef.current;
+      let text: string;
+      let color: string;
+
+      if (pool.length > 0) {
+        const entry = pool[Math.floor(Math.random() * pool.length)];
+        text = entry.text;
+        color = entry.color;
+      } else {
+        // Until data loads, show loading-style fragments
+        text = `CVE-${2025 + Math.floor(Math.random() * 2)}-${String(Math.floor(Math.random() * 99999)).padStart(5, "0")} LOADING...`;
+        color = fallbackColors[Math.floor(Math.random() * fallbackColors.length)];
+      }
+
       const frag: Fragment = {
         id: nextId++,
         x: Math.random() * 80 + 10,
         y: -5,
-        text: CODE_SNIPPETS[Math.floor(Math.random() * CODE_SNIPPETS.length)],
+        text,
         speed: 0.02 + Math.random() * 0.04,
         opacity: 0.15 + Math.random() * 0.25,
         size: 8 + Math.random() * 4,
-        color: colors[Math.floor(Math.random() * colors.length)],
+        color,
       };
       setFragments((prev) => [...prev.slice(-25), frag]);
     };

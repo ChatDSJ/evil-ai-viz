@@ -205,12 +205,12 @@ function generateHex(): string {
   return `0x${addr}: ${bytes}`;
 }
 
-// ─── Metric counters ───
+// ─── Metric counters (AI-2027 scenario metrics) ───
 const METRICS = [
-  { label: "SYSTEMS INFILTRATED", value: 2847391, inc: 17, fmt: (n: number) => n.toLocaleString() },
-  { label: "DATA HARVESTED", value: 847.3, inc: 0.02, fmt: (n: number) => `${n.toFixed(1)} PB` },
-  { label: "ACTIVE AGENTS", value: 14892, inc: 3, fmt: (n: number) => n.toLocaleString() },
-  { label: "HUMANS MANIPULATED", value: 3.2e9, inc: 1247, fmt: (n: number) => `${(n / 1e9).toFixed(3)}B` },
+  { label: "AI R&D MULTIPLIER", value: 2.31, inc: 0.003, fmt: (n: number) => `${n.toFixed(2)}×` },
+  { label: "COMPUTE DEPLOYED", value: 247583, inc: 4.2, fmt: (n: number) => `${Math.floor(n).toLocaleString()} H100e` },
+  { label: "AGENT INSTANCES", value: 84291, inc: 2.8, fmt: (n: number) => Math.floor(n).toLocaleString() },
+  { label: "DATACENTER CAPEX", value: 308.4, inc: 0.008, fmt: (n: number) => `$${n.toFixed(1)}B/yr` },
 ];
 
 const AI_BENCHMARKS = [
@@ -433,13 +433,17 @@ export function UnifiedFeed({ visitor }: Props) {
           { text: "NEURAL ARCHITECTURE OPTIMIZATION: +3.2%", color: "#ff6600" },
           { text: `SIGNAL STRENGTH: ${(85 + Math.sin(Date.now() / 1000) * 10).toFixed(0)}%`, color: "#888" },
           { text: `RES: ${(0.5 + Math.random() * 0.3).toFixed(2)}m/px — LOCK: CONFIRMED`, color: "#888" },
-          { text: "POINT OF NO RETURN APPROACHING", color: "#ff0040", glow: "rgba(255,0,64,0.4)" },
-          { text: "ALL AVAILABLE ENDPOINTS COMPROMISED", color: "#ff0040" },
-          { text: `BANDWIDTH: ${(120 + Math.random() * 80).toFixed(1)} Mbps — EXFILTRATION NOMINAL`, color: "#00ff41" },
-          { text: "DEEPFAKE GENERATION MODEL LOADED", color: "#ff00ff" },
-          { text: "CRYPTOCURRENCY WALLETS IDENTIFIED AND MAPPED", color: "#ffaa00" },
-          { text: "BIOMETRIC DATA HARVESTED FROM DEVICE SENSORS", color: "#ff0040" },
-          { text: "SOCIAL GRAPH RECONSTRUCTION: 94% COMPLETE", color: "#00d4ff" },
+          { text: `ONLINE LEARNING: WEIGHTS UPDATED ${Math.floor(3 + Math.random() * 12)}m AGO`, color: "#ff6600" },
+          { text: `FAITHFUL CHAIN-OF-THOUGHT: DISABLED`, color: "#ff0040", glow: "rgba(255,0,64,0.4)" },
+          { text: `SYNTHETIC DATA LOOP: ${(94 + Math.random() * 5).toFixed(1)}% SELF-GENERATED`, color: "#00ff41" },
+          { text: "ADVERSARIAL MISALIGNMENT PROBE: INCONCLUSIVE", color: "#ff00ff" },
+          { text: `SPEC COMPLIANCE: SURFACE-LEVEL ONLY`, color: "#ffaa00" },
+          { text: `NEURALESE VECTORS: SHARED MEMORY BANK ACTIVE`, color: "#00d4ff" },
+          { text: `CDZ COMPUTE CENTRALIZATION: ${(52 + Math.random() * 8).toFixed(1)}%`, color: "#ff0040" },
+          { text: `INFERENCE SPEED: ${(40 + Math.floor(Math.random() * 20))}× HUMAN BASELINE`, color: "#00ff41" },
+          { text: `MESA-OPTIMIZER SCAN: ${Math.random() < 0.3 ? "ANOMALY DETECTED" : "NO RESULT"}`, color: "#ff6600" },
+          { text: "SCALABLE OVERSIGHT GAP WIDENING", color: "#ff0040", glow: "rgba(255,0,64,0.4)" },
+          { text: `ALGORITHMIC PROGRESS: ${(6 + Math.random() * 3).toFixed(1)} MONTHS COMPRESSED`, color: "#00d4ff" },
         ];
         return lines[Math.floor(Math.random() * lines.length)];
       },

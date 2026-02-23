@@ -373,30 +373,22 @@ export function UserLocationMap({ visitor }: Props) {
 
       // ═══ Info panels ═══
 
-      // Top left - GEOLOCATION LOCK
+      // Top left - compact data (no header label)
       ctx.textAlign = "left";
-      ctx.font = "bold 9px 'Courier New', monospace";
-      ctx.fillStyle = "#ff0040";
-      ctx.fillText("█ METRO SWEEP", 8, 16);
-
       ctx.font = "8px 'Courier New', monospace";
       ctx.fillStyle = "#00ff41";
-      let infoY = 30;
-      const lineH = 12;
+      let infoY = 14;
+      const lineH = 11;
 
-      ctx.fillText(`BASE: ${visitor.city.toUpperCase()}, ${visitor.region.toUpperCase()}`, 8, infoY);
-      infoY += lineH;
-      ctx.fillText(`CENTER: ${visitor.lat.toFixed(4)}°N, ${Math.abs(visitor.lon).toFixed(4)}°${visitor.lon >= 0 ? "E" : "W"}`, 8, infoY);
+      ctx.fillText(`${visitor.lat.toFixed(4)}°N, ${Math.abs(visitor.lon).toFixed(4)}°${visitor.lon >= 0 ? "E" : "W"}`, 8, infoY);
       infoY += lineH;
 
       ctx.fillStyle = "#00d4ff";
-      ctx.fillText(`TARGET: ${target.lat.toFixed(5)}°N, ${Math.abs(target.lon).toFixed(5)}°${target.lon >= 0 ? "E" : "W"}`, 8, infoY);
+      ctx.fillText(`${target.lat.toFixed(5)}°N, ${Math.abs(target.lon).toFixed(5)}°${target.lon >= 0 ? "E" : "W"}`, 8, infoY);
       infoY += lineH;
 
       ctx.fillStyle = "#888";
-      ctx.fillText(`SECTOR: ${(currentTarget + 1).toString().padStart(3, "0")}/${targets.length.toString().padStart(3, "0")}`, 8, infoY);
-      infoY += lineH;
-      ctx.fillText(`ZOOM: ${zoomLevel.toFixed(1)}x`, 8, infoY);
+      ctx.fillText(`${(currentTarget + 1).toString().padStart(3, "0")}/${targets.length.toString().padStart(3, "0")} ${zoomLevel.toFixed(1)}x`, 8, infoY);
 
       // Bottom right - live data
       ctx.textAlign = "right";

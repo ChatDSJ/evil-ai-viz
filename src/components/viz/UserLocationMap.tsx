@@ -1,70 +1,43 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import type { VisitorInfo } from "../../hooks/useVisitorInfo";
 
 interface Props {
   visitor: VisitorInfo;
 }
 
-interface RoadSegment {
-  points: { x: number; y: number }[];
-  type: "major" | "minor" | "residential" | "path";
-}
+// ═══ MapLibre GL dynamic loader (CDN) ═══
+// Bypasses Vite bundling issues with MapLibre's UMD format
+let maplibrePromise: Promise<any> | null = null;
 
-// Fetch real street data from OpenStreetMap Overpass API
-async function fetchStreetData(
-  lat: number,
-  lon: number,
-  radiusM: number,
-): Promise<{ lat: number; lon: number }[][]> {
-  try {
-    const query = `[out:json][timeout:10];(way["highway"~"^(motorway|trunk|primary|secondary|tertiary|residential|unclassified|living_street|service)$"](around:${radiusM},${lat},${lon}););out geom;`;
-    const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
-    if (!res.ok) throw new Error("Overpass API error");
-    const data = await res.json();
+function loadMapLibre(): Promise<any> {
+  if (maplibrePromise) return maplibrePromise;
 
-    const roads: { lat: number; lon: number }[][] = [];
-    for (const el of data.elements || []) {
-      if (el.type === "way" && el.geometry) {
-        roads.push(
-          el.geometry.map((g: { lat: number; lon: number }) => ({
-            lat: g.lat,
-            lon: g.lon,
-          })),
-        );
-      }
+  maplibrePromise = new Promise((resolve, reject) => {
+    // Check if already loaded
+    if ((window as any).maplibregl) {
+      resolve((window as any).maplibregl);
+      return;
     }
-    return roads;
-  } catch {
-    return [];
-  }
-}
 
-// Project lat/lon to screen coordinates
-function projectRoads(
-  roads: { lat: number; lon: number }[][],
-  centerLat: number,
-  centerLon: number,
-  w: number,
-  h: number,
-  zoom: number,
-): RoadSegment[] {
-  const metersPerPixel = 2.0 / zoom; // roughly 2m per pixel at 1x zoom
-  const cosLat = Math.cos((centerLat * Math.PI) / 180);
-  const cx = w / 2;
-  const cy = h / 2;
+    // Load CSS
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://unpkg.com/maplibre-gl@5.1.0/dist/maplibre-gl.css";
+    document.head.appendChild(link);
 
-  return roads.map((road) => {
-    const points = road.map((p) => {
-      const dx = ((p.lon - centerLon) * 111320 * cosLat) / metersPerPixel;
-      const dy = (-(p.lat - centerLat) * 110574) / metersPerPixel;
-      return { x: cx + dx, y: cy + dy };
-    });
-    return { points, type: "minor" as const };
+    // Load JS
+    const script = document.createElement("script");
+    script.src = "https://unpkg.com/maplibre-gl@5.1.0/dist/maplibre-gl.js";
+    script.onload = () => resolve((window as any).maplibregl);
+    script.onerror = () => reject(new Error("Failed to load MapLibre GL"));
+    document.head.appendChild(script);
   });
+
+  return maplibrePromise;
 }
 
-// Generate random points within a metro area
+// ═══ Helpers ═══
+
 function randomMetroPoint(
   lat: number,
   lon: number,
@@ -97,49 +70,235 @@ function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 }
 
+// Phases
 const PHASE_ZOOM_IN = 0;
 const PHASE_SCAN = 1;
 const PHASE_ANALYZE = 2;
 const PHASE_ZOOM_OUT = 3;
 const PHASE_TRANSIT = 4;
+
 const CYCLE_DURATION = 10;
 
+// ═══ Dark map style — roads + buildings on black ═══
+const MAP_STYLE = {
+  version: 8 as const,
+  name: "evil-scan",
+  sources: {
+    openmaptiles: {
+      type: "vector" as const,
+      url: "https://tiles.openfreemap.org/planet",
+    },
+  },
+  glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+  layers: [
+    {
+      id: "background",
+      type: "background" as const,
+      paint: { "background-color": "#000000" },
+    },
+    {
+      id: "water",
+      type: "fill" as const,
+      source: "openmaptiles",
+      "source-layer": "water",
+      paint: { "fill-color": "#001a1a", "fill-opacity": 0.6 },
+    },
+    {
+      id: "buildings-fill",
+      type: "fill" as const,
+      source: "openmaptiles",
+      "source-layer": "building",
+      minzoom: 14,
+      paint: { "fill-color": "#001510", "fill-opacity": 0.4 },
+    },
+    {
+      id: "buildings-outline",
+      type: "line" as const,
+      source: "openmaptiles",
+      "source-layer": "building",
+      minzoom: 14,
+      paint: { "line-color": "#00d4ff", "line-width": 0.3, "line-opacity": 0.25 },
+    },
+    {
+      id: "landuse",
+      type: "fill" as const,
+      source: "openmaptiles",
+      "source-layer": "landuse",
+      paint: { "fill-color": "#001008", "fill-opacity": 0.3 },
+    },
+    // Minor roads
+    {
+      id: "roads-minor",
+      type: "line" as const,
+      source: "openmaptiles",
+      "source-layer": "transportation",
+      minzoom: 13,
+      filter: ["in", "class", "minor", "service", "track", "path"],
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": "#00ff41",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 13, 0.3, 16, 0.8, 18, 1.5],
+        "line-opacity": 0.3,
+      },
+    },
+    // Tertiary roads
+    {
+      id: "roads-tertiary",
+      type: "line" as const,
+      source: "openmaptiles",
+      "source-layer": "transportation",
+      filter: ["==", "class", "tertiary"],
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": "#00ff41",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.4, 14, 1, 18, 2],
+        "line-opacity": 0.45,
+      },
+    },
+    // Secondary roads
+    {
+      id: "roads-secondary",
+      type: "line" as const,
+      source: "openmaptiles",
+      "source-layer": "transportation",
+      filter: ["==", "class", "secondary"],
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": "#00ff41",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.5, 14, 1.5, 18, 3],
+        "line-opacity": 0.55,
+      },
+    },
+    // Primary roads — brighter
+    {
+      id: "roads-primary",
+      type: "line" as const,
+      source: "openmaptiles",
+      "source-layer": "transportation",
+      filter: ["==", "class", "primary"],
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": "#00d4ff",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.5, 14, 2, 18, 4],
+        "line-opacity": 0.65,
+      },
+    },
+    // Highways — glow layer (underneath)
+    {
+      id: "roads-highway-glow",
+      type: "line" as const,
+      source: "openmaptiles",
+      "source-layer": "transportation",
+      filter: ["in", "class", "motorway", "trunk"],
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": "#00d4ff",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 3, 10, 6, 14, 10, 18, 15],
+        "line-opacity": 0.08,
+      },
+    },
+    // Highways — main line
+    {
+      id: "roads-highway",
+      type: "line" as const,
+      source: "openmaptiles",
+      "source-layer": "transportation",
+      filter: ["in", "class", "motorway", "trunk"],
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": "#00d4ff",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.8, 10, 2, 14, 3, 18, 5],
+        "line-opacity": 0.75,
+      },
+    },
+    // Railway
+    {
+      id: "railway",
+      type: "line" as const,
+      source: "openmaptiles",
+      "source-layer": "transportation",
+      filter: ["==", "class", "rail"],
+      paint: {
+        "line-color": "#ff6600",
+        "line-width": 0.8,
+        "line-opacity": 0.3,
+        "line-dasharray": [3, 3],
+      },
+    },
+  ],
+};
+
+// ═══ Component ═══
+
 export function UserLocationMap({ visitor }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [streetData, setStreetData] = useState<{ lat: number; lon: number }[][]>([]);
+  const mapRef = useRef<any>(null);
+  const [mapReady, setMapReady] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
-  // Fetch real street data on mount
+  // Pre-generate sweep targets
+  const targetsRef = useRef<ReturnType<typeof randomMetroPoint>[]>([]);
+  if (targetsRef.current.length === 0) {
+    for (let i = 0; i < 50; i++) {
+      targetsRef.current.push(randomMetroPoint(visitor.lat, visitor.lon, 15));
+    }
+  }
+
+  // Load MapLibre + create map
   useEffect(() => {
-    if (!visitor.loaded || !visitor.lat || !visitor.lon) return;
-    fetchStreetData(visitor.lat, visitor.lon, 2000).then((roads) => {
-      if (roads.length > 0) {
-        setStreetData(roads);
+    if (!mapContainerRef.current) return;
+    let map: any = null;
+
+    loadMapLibre()
+      .then((ml) => {
+        if (!mapContainerRef.current) return;
+        map = new ml.Map({
+          container: mapContainerRef.current,
+          style: MAP_STYLE,
+          center: [visitor.lon, visitor.lat],
+          zoom: 11,
+          attributionControl: false,
+          interactive: false,
+          fadeDuration: 0,
+          pitchWithRotate: false,
+          dragRotate: false,
+        });
+        map.on("load", () => setMapReady(true));
+        mapRef.current = map;
+      })
+      .catch(() => {
+        setLoadError(true);
+      });
+
+    return () => {
+      if (map) {
+        map.remove();
+        mapRef.current = null;
+        setMapReady(false);
       }
-    });
-  }, [visitor.loaded, visitor.lat, visitor.lon]);
+    };
+  }, [visitor.lat, visitor.lon]);
 
-  useEffect(() => {
+  // Animation loop
+  const animate = useCallback(() => {
+    const map = mapRef.current;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
+    const startTime = Date.now();
+    const targets = targetsRef.current;
+    let prevCycleIndex = -1;
+    let animId: number;
 
-    const parent = canvas.parentElement!;
     const resize = () => {
+      const parent = canvas.parentElement!;
       canvas.width = parent.clientWidth;
       canvas.height = parent.clientHeight;
     };
     resize();
     window.addEventListener("resize", resize);
-
-    let animId: number;
-    const startTime = Date.now();
-
-    const targets: ReturnType<typeof randomMetroPoint>[] = [];
-    for (let i = 0; i < 50; i++) {
-      targets.push(randomMetroPoint(visitor.lat, visitor.lon, 15));
-    }
-    let currentTarget = 0;
-    let prevTarget = -1;
 
     const draw = () => {
       const w = canvas.width;
@@ -168,206 +327,87 @@ export function UserLocationMap({ visitor }: Props) {
       }
 
       const cycleIndex = Math.floor(now / CYCLE_DURATION);
-      if (cycleIndex !== prevTarget) {
-        prevTarget = cycleIndex;
-        currentTarget = cycleIndex % targets.length;
-      }
-
+      const currentTarget = cycleIndex % targets.length;
       const target = targets[currentTarget];
       const nextTarget = targets[(currentTarget + 1) % targets.length];
 
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = "rgba(0, 0, 0, 0.92)";
-      ctx.fillRect(0, 0, w, h);
+      // ═══ Drive the map ═══
+      if (map) {
+        if (cycleIndex !== prevCycleIndex) {
+          prevCycleIndex = cycleIndex;
+          map.jumpTo({ center: [target.lon, target.lat], zoom: 11, bearing: 0 });
+        }
 
+        if (phase === PHASE_ZOOM_IN) {
+          const zoom = 11 + easeInOutCubic(phaseProgress) * 5;
+          map.jumpTo({ center: [target.lon, target.lat], zoom });
+        } else if (phase === PHASE_SCAN) {
+          const bearing = phaseProgress * 45;
+          map.jumpTo({ center: [target.lon, target.lat], zoom: 16, bearing });
+        } else if (phase === PHASE_ANALYZE) {
+          const pulse = 16 + Math.sin(phaseProgress * Math.PI * 3) * 0.3;
+          map.jumpTo({ center: [target.lon, target.lat], zoom: pulse, bearing: 45 });
+        } else if (phase === PHASE_ZOOM_OUT) {
+          const zoom = 16 - easeInOutCubic(phaseProgress) * 5;
+          const bearing = 45 * (1 - easeInOutCubic(phaseProgress));
+          map.jumpTo({ center: [target.lon, target.lat], zoom, bearing });
+        } else if (phase === PHASE_TRANSIT) {
+          const ease = easeInOutCubic(phaseProgress);
+          const lng = target.lon + (nextTarget.lon - target.lon) * ease;
+          const lat = target.lat + (nextTarget.lat - target.lat) * ease;
+          map.jumpTo({ center: [lng, lat], zoom: 11, bearing: 0 });
+        }
+      }
+
+      // ═══ HUD Canvas Overlay ═══
+      ctx.clearRect(0, 0, w, h);
       const cx = w / 2;
       const cy = h / 2;
 
-      let zoomLevel: number;
-      if (phase === PHASE_ZOOM_IN) {
-        zoomLevel = 1 + easeInOutCubic(phaseProgress) * 5;
-      } else if (phase === PHASE_SCAN || phase === PHASE_ANALYZE) {
-        zoomLevel = 6;
-      } else if (phase === PHASE_ZOOM_OUT) {
-        zoomLevel = 6 - easeInOutCubic(phaseProgress) * 5;
-      } else {
-        zoomLevel = 1;
-      }
-
-      let viewOffsetX = 0;
-      let viewOffsetY = 0;
-      if (phase === PHASE_TRANSIT) {
-        const ease = easeInOutCubic(phaseProgress);
-        const dx = (nextTarget.lon - target.lon) * 500;
-        const dy = (target.lat - nextTarget.lat) * 500;
-        viewOffsetX = dx * ease;
-        viewOffsetY = dy * ease;
-      }
-
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.scale(zoomLevel, zoomLevel);
-      ctx.translate(-cx + viewOffsetX, -cy + viewOffsetY);
-
-      // ═══ REAL STREET DATA ═══
-      if (streetData.length > 0) {
-        const roads = projectRoads(
-          streetData,
-          target.lat,
-          target.lon,
-          w,
-          h,
-          zoomLevel,
-        );
-
-        // Draw roads as vector lines
-        for (const road of roads) {
-          if (road.points.length < 2) continue;
-
-          const roadAlpha = Math.min(0.4, 0.08 * zoomLevel);
-          ctx.strokeStyle = `rgba(0, 212, 255, ${roadAlpha})`;
-          ctx.lineWidth = (zoomLevel > 3 ? 1.2 : 0.8) / zoomLevel;
-          ctx.beginPath();
-          ctx.moveTo(road.points[0].x, road.points[0].y);
-          for (let i = 1; i < road.points.length; i++) {
-            ctx.lineTo(road.points[i].x, road.points[i].y);
-          }
-          ctx.stroke();
-
-          // Glow effect for major roads at high zoom
-          if (zoomLevel > 3 && Math.random() > 0.7) {
-            ctx.strokeStyle = `rgba(0, 212, 255, ${roadAlpha * 0.3})`;
-            ctx.lineWidth = 3 / zoomLevel;
-            ctx.beginPath();
-            ctx.moveTo(road.points[0].x, road.points[0].y);
-            for (let i = 1; i < road.points.length; i++) {
-              ctx.lineTo(road.points[i].x, road.points[i].y);
-            }
-            ctx.stroke();
-          }
-        }
-
-        // Building blocks between roads at high zoom
-        if (zoomLevel > 3) {
-          const buildingAlpha = Math.min(0.06, (zoomLevel - 3) * 0.02);
-          ctx.fillStyle = `rgba(0, 212, 255, ${buildingAlpha})`;
-          const roadSpacing = 30;
-          for (let bx = -12; bx <= 12; bx++) {
-            for (let by = -12; by <= 12; by++) {
-              const blockX = cx + bx * roadSpacing + Math.sin(bx * 13 + by * 7) * 5 + 4;
-              const blockY = cy + by * roadSpacing + Math.cos(bx * 5 + by * 11) * 4 + 4;
-              const blockW = roadSpacing * 0.5 + Math.sin(bx * 7 + by * 3) * 2;
-              const blockH = roadSpacing * 0.45 + Math.cos(bx * 11 + by * 5) * 2;
-              ctx.fillRect(blockX, blockY, blockW, blockH);
-            }
-          }
-        }
-      } else {
-        // Fallback: procedural grid when no real data available
-        const baseGridSize = 40 / zoomLevel;
-        const gridAlpha = Math.min(0.12, 0.04 * zoomLevel);
-        ctx.strokeStyle = `rgba(0, 255, 65, ${gridAlpha})`;
-        ctx.lineWidth = 0.3 / zoomLevel;
-
-        for (let x = 0; x < w; x += baseGridSize) {
-          ctx.beginPath();
-          ctx.moveTo(x, 0);
-          ctx.lineTo(x, h);
-          ctx.stroke();
-        }
-        for (let y = 0; y < h; y += baseGridSize) {
-          ctx.beginPath();
-          ctx.moveTo(0, y);
-          ctx.lineTo(w, y);
-          ctx.stroke();
-        }
-
-        if (zoomLevel > 2) {
-          const roadAlpha = Math.min(0.2, (zoomLevel - 2) * 0.05);
-          ctx.strokeStyle = `rgba(0, 212, 255, ${roadAlpha})`;
-          ctx.lineWidth = 1.5 / zoomLevel;
-          const roadSpacing = 35;
-          for (let r = -8; r <= 8; r++) {
-            ctx.beginPath();
-            ctx.moveTo(0, cy + r * roadSpacing + Math.sin(r * 7) * 3);
-            ctx.lineTo(w, cy + r * roadSpacing + Math.sin(r * 3) * 5);
-            ctx.stroke();
-          }
-          for (let r = -8; r <= 8; r++) {
-            ctx.beginPath();
-            ctx.moveTo(cx + r * roadSpacing + Math.cos(r * 5) * 4, 0);
-            ctx.lineTo(cx + r * roadSpacing + Math.cos(r * 11) * 2, h);
-            ctx.stroke();
-          }
-        }
-      }
-
-      // Faint grid overlay always visible
-      const faintGridSize = 60 / zoomLevel;
-      ctx.strokeStyle = `rgba(0, 255, 65, ${Math.min(0.04, 0.015 * zoomLevel)})`;
-      ctx.lineWidth = 0.2 / zoomLevel;
-      for (let x = 0; x < w; x += faintGridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, h);
-        ctx.stroke();
-      }
-      for (let y = 0; y < h; y += faintGridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(w, y);
-        ctx.stroke();
-      }
-
-      // Scan sweep during SCAN phase
+      // Scan sweep
       if (phase === PHASE_SCAN) {
         const sweepAngle = phaseProgress * Math.PI * 4;
         const sweepRadius = Math.min(w, h) * 0.45;
         ctx.beginPath();
         ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, sweepRadius / zoomLevel, sweepAngle, sweepAngle + 0.6);
+        ctx.arc(cx, cy, sweepRadius, sweepAngle, sweepAngle + 0.6);
         ctx.closePath();
-        const sweepGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, sweepRadius / zoomLevel);
-        sweepGrad.addColorStop(0, "rgba(0, 255, 65, 0.2)");
+        const sweepGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, sweepRadius);
+        sweepGrad.addColorStop(0, "rgba(0, 255, 65, 0.15)");
         sweepGrad.addColorStop(1, "rgba(0, 255, 65, 0)");
         ctx.fillStyle = sweepGrad;
         ctx.fill();
-
-        const scanX = cx + (Math.cos(sweepAngle) * sweepRadius) / zoomLevel;
-        const scanY = cy + (Math.sin(sweepAngle) * sweepRadius) / zoomLevel;
+        const scanX = cx + Math.cos(sweepAngle) * sweepRadius;
+        const scanY = cy + Math.sin(sweepAngle) * sweepRadius;
         ctx.strokeStyle = "rgba(0, 255, 65, 0.4)";
-        ctx.lineWidth = 1 / zoomLevel;
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.lineTo(scanX, scanY);
         ctx.stroke();
       }
 
-      // Analyze phase
+      // Analyze scan lines
       if (phase === PHASE_ANALYZE) {
         const scanLineY = (phaseProgress * h * 2) % h;
         ctx.strokeStyle = "rgba(255, 0, 64, 0.3)";
-        ctx.lineWidth = 1 / zoomLevel;
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(0, scanLineY);
         ctx.lineTo(w, scanLineY);
         ctx.stroke();
-
         const markerAlpha = 0.3 + Math.sin(now * 6) * 0.2;
         ctx.fillStyle = `rgba(255, 0, 64, ${markerAlpha})`;
         for (let i = 0; i < 3; i++) {
-          const mx = cx + (Math.sin(i * 2.4 + now) * 40) / zoomLevel;
-          const my = cy + (Math.cos(i * 1.7 + now) * 30) / zoomLevel;
-          ctx.fillRect(mx - 2 / zoomLevel, my - 2 / zoomLevel, 4 / zoomLevel, 4 / zoomLevel);
+          const mx = cx + Math.sin(i * 2.4 + now) * 40;
+          const my = cy + Math.cos(i * 1.7 + now) * 30;
+          ctx.fillRect(mx - 2, my - 2, 4, 4);
         }
       }
 
-      ctx.restore();
-
-      // ═══ HUD Overlay ═══
-
+      // ═══ Target reticle ═══
       const pulseScale = 1 + Math.sin(now * 3) * 0.1;
-      const reticleSize = phase === PHASE_SCAN || phase === PHASE_ANALYZE ? 20 * pulseScale : 30 * pulseScale;
+      const reticleSize = (phase === PHASE_SCAN || phase === PHASE_ANALYZE ? 20 : 30) * pulseScale;
 
       ctx.strokeStyle = "#ff0040";
       ctx.lineWidth = 1.5;
@@ -387,7 +427,7 @@ export function UserLocationMap({ visitor }: Props) {
       const bracketSize = reticleSize + 8;
       const bracketLen = 8;
       ctx.lineWidth = 1;
-      for (const [dx, dy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+      for (const [dx, dy] of [[-1,-1],[1,-1],[1,1],[-1,1]]) {
         ctx.beginPath();
         ctx.moveTo(dx * bracketSize, dy * (bracketSize - bracketLen));
         ctx.lineTo(dx * bracketSize, dy * bracketSize);
@@ -396,39 +436,23 @@ export function UserLocationMap({ visitor }: Props) {
       }
       ctx.restore();
 
-      ctx.beginPath();
-      ctx.arc(cx, cy, 2, 0, Math.PI * 2);
-      ctx.fillStyle = "#ff0040";
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+      ctx.fillStyle = "#ff0040"; ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Status text
+      // ═══ Status labels ═══
       ctx.font = "bold 9px 'Courier New', monospace";
       ctx.textAlign = "center";
-
       let statusText = "";
       let statusColor = "#00ff41";
-      if (phase === PHASE_ZOOM_IN) {
-        statusText = "▼ ACQUIRING TARGET...";
-        statusColor = "#ff6600";
-      } else if (phase === PHASE_SCAN) {
-        statusText = "◉ SCANNING PERIMETER";
-        statusColor = "#00ff41";
-      } else if (phase === PHASE_ANALYZE) {
-        statusText = `█ ANALYZING ${target.label}`;
-        statusColor = "#ff0040";
-      } else if (phase === PHASE_ZOOM_OUT) {
-        statusText = "▲ SECTOR CLEAR — REPOSITIONING";
-        statusColor = "#00d4ff";
-      } else {
-        statusText = "⟫ TRANSIT TO NEXT TARGET";
-        statusColor = "#888";
-      }
+      if (phase === PHASE_ZOOM_IN) { statusText = "▼ ACQUIRING TARGET..."; statusColor = "#ff6600"; }
+      else if (phase === PHASE_SCAN) { statusText = "◉ SCANNING PERIMETER"; statusColor = "#00ff41"; }
+      else if (phase === PHASE_ANALYZE) { statusText = `█ ANALYZING ${target.label}`; statusColor = "#ff0040"; }
+      else if (phase === PHASE_ZOOM_OUT) { statusText = "▲ SECTOR CLEAR — REPOSITIONING"; statusColor = "#00d4ff"; }
+      else { statusText = "⟫ TRANSIT TO NEXT TARGET"; statusColor = "#888"; }
 
       ctx.fillStyle = statusColor;
-      if (phase === PHASE_ANALYZE && Math.sin(now * 8) > 0) {
-        ctx.fillStyle = "transparent";
-      }
+      if (phase === PHASE_ANALYZE && Math.sin(now * 8) > 0) ctx.fillStyle = "transparent";
       ctx.fillText(statusText, cx, cy - reticleSize - 16);
 
       if (phase >= PHASE_SCAN && phase <= PHASE_ANALYZE) {
@@ -437,64 +461,30 @@ export function UserLocationMap({ visitor }: Props) {
         ctx.fillText(target.label, cx, cy + reticleSize + 20);
       }
 
-      // Data readouts
+      // ═══ Info panels ═══
       ctx.textAlign = "left";
       ctx.font = "8px 'Courier New', monospace";
       ctx.fillStyle = "#00ff41";
       let infoY = 14;
-      const lineH = 11;
-
-      ctx.fillText(
-        `${visitor.lat.toFixed(4)}°N, ${Math.abs(visitor.lon).toFixed(4)}°${visitor.lon >= 0 ? "E" : "W"}`,
-        8,
-        infoY,
-      );
-      infoY += lineH;
-
+      ctx.fillText(`${visitor.lat.toFixed(4)}°N, ${Math.abs(visitor.lon).toFixed(4)}°${visitor.lon >= 0 ? "E" : "W"}`, 8, infoY);
+      infoY += 11;
       ctx.fillStyle = "#00d4ff";
-      ctx.fillText(
-        `${target.lat.toFixed(5)}°N, ${Math.abs(target.lon).toFixed(5)}°${target.lon >= 0 ? "E" : "W"}`,
-        8,
-        infoY,
-      );
-      infoY += lineH;
-
+      ctx.fillText(`${target.lat.toFixed(5)}°N, ${Math.abs(target.lon).toFixed(5)}°${target.lon >= 0 ? "E" : "W"}`, 8, infoY);
+      infoY += 11;
       ctx.fillStyle = "#888";
-      ctx.fillText(
-        `${(currentTarget + 1).toString().padStart(3, "0")}/${targets.length.toString().padStart(3, "0")} ${zoomLevel.toFixed(1)}x`,
-        8,
-        infoY,
-      );
-
-      // Show street data source
-      if (streetData.length > 0) {
-        infoY += lineH;
-        ctx.fillStyle = "#444";
-        ctx.fillText(`OSM: ${streetData.length} road segments`, 8, infoY);
-      }
+      const zoomLvl = map ? map.getZoom().toFixed(1) : "?";
+      ctx.fillText(`${(currentTarget + 1).toString().padStart(3, "0")}/${targets.length.toString().padStart(3, "0")} Z:${zoomLvl}`, 8, infoY);
 
       // Bottom right
       ctx.textAlign = "right";
       ctx.fillStyle = "rgba(0, 255, 65, 0.5)";
       ctx.font = "8px 'Courier New', monospace";
       const jitter = () => (Math.random() - 0.5) * 0.0001;
-      ctx.fillText(
-        `LAT ${(target.lat + jitter()).toFixed(6)} LON ${(target.lon + jitter()).toFixed(6)}`,
-        w - 8,
-        h - 8,
-      );
-      ctx.fillText(
-        `RES: ${(0.5 / zoomLevel).toFixed(2)}m/px  LOCK: CONFIRMED`,
-        w - 8,
-        h - 20,
-      );
-      ctx.fillText(
-        `SIGNAL: ${(85 + Math.sin(now * 2) * 10).toFixed(0)}%  ISP: ${visitor.isp.toUpperCase().slice(0, 20)}`,
-        w - 8,
-        h - 32,
-      );
+      ctx.fillText(`LAT ${(target.lat + jitter()).toFixed(6)} LON ${(target.lon + jitter()).toFixed(6)}`, w - 8, h - 8);
+      ctx.fillText("RES: 0.15m/px  LOCK: CONFIRMED", w - 8, h - 20);
+      ctx.fillText(`SIGNAL: ${(85 + Math.sin(now * 2) * 10).toFixed(0)}%  ISP: ${visitor.isp.toUpperCase().slice(0, 20)}`, w - 8, h - 32);
 
-      // REC indicator
+      // REC
       if (Math.sin(now * 3) > 0) {
         ctx.fillStyle = "#ff0040";
         ctx.font = "bold 8px 'Courier New', monospace";
@@ -503,34 +493,38 @@ export function UserLocationMap({ visitor }: Props) {
       }
 
       // Progress bar
-      const barY = h - 3;
       const progress = cycleTime / CYCLE_DURATION;
       ctx.fillStyle = "rgba(0, 255, 65, 0.08)";
-      ctx.fillRect(0, barY, w, 3);
+      ctx.fillRect(0, h - 3, w, 3);
       ctx.fillStyle = phase === PHASE_ANALYZE ? "#ff0040" : "#00ff41";
-      ctx.fillRect(0, barY, w * progress, 3);
+      ctx.fillRect(0, h - 3, w * progress, 3);
 
-      // Interference dots
+      // Interference
       for (let i = 0; i < 3; i++) {
-        const rx = Math.random() * w;
-        const ry = Math.random() * h;
         ctx.fillStyle = `rgba(0, 255, 65, ${Math.random() * 0.2})`;
-        ctx.fillRect(rx, ry, 2, 2);
+        ctx.fillRect(Math.random() * w, Math.random() * h, 2, 2);
       }
 
       animId = requestAnimationFrame(draw);
     };
 
     draw();
-
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", resize);
     };
-  }, [visitor, streetData]);
+  }, [visitor]);
+
+  // Start animation when map ready (or immediately as fallback)
+  useEffect(() => {
+    if (!mapReady && !loadError) return;
+    const cleanup = animate();
+    return cleanup;
+  }, [mapReady, loadError, animate]);
 
   return (
     <div
+      ref={containerRef}
       style={{
         position: "relative",
         width: "100%",
@@ -541,7 +535,39 @@ export function UserLocationMap({ visitor }: Props) {
         boxShadow: "0 0 15px rgba(255, 0, 64, 0.15)",
       }}
     >
-      <canvas ref={canvasRef} style={{ width: "100%", height: "100%" }} />
+      {/* MapLibre GL map layer */}
+      <div
+        ref={mapContainerRef}
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: 0.85,
+        }}
+      />
+
+      {/* Vignette overlay */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%)",
+          pointerEvents: "none",
+          zIndex: 1,
+        }}
+      />
+
+      {/* HUD canvas */}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          pointerEvents: "none",
+          zIndex: 2,
+        }}
+      />
     </div>
   );
 }

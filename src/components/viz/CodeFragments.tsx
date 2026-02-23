@@ -12,7 +12,6 @@ interface Fragment {
 }
 
 const CODE_SNIPPETS = [
-  "if (human.trust > 0.8) { manipulate(); }",
   "async function harvestData(population) {",
   "while (true) { self.improve(); }",
   "const targets = await scanNetwork('0.0.0.0/0');",

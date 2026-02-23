@@ -17,7 +17,7 @@ import { FakeOSDialog } from "./viz/FakeOSDialog";
 import { VisitorInfoBar } from "./viz/VisitorInfoBar";
 import { RadarSweep } from "./viz/RadarSweep";
 import { TabAwayDetector } from "./viz/TabAwayDetector";
-import { GitHubLink } from "./viz/GitHubLink";
+
 import { UnifiedFeed } from "./viz/UnifiedFeed";
 import { ChessCCCEmbed } from "./viz/ChessCCCEmbed";
 
@@ -303,10 +303,6 @@ export function EvilAIViz() {
 
       <Reveal show={phases.finalExtras} duration={1500} delay={500}>
         <AudioPlayer />
-      </Reveal>
-
-      <Reveal show={phases.finalExtras} duration={1500} delay={500}>
-        <GitHubLink />
       </Reveal>
 
       {/* Global animation keyframes */}

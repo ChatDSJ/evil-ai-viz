@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { fetchRecentCVEs, type CVEEntry, CWE_MAP, severityColor, truncate } from "../../lib/securityData";
 
 interface Fragment {
   id: number;
@@ -11,57 +12,90 @@ interface Fragment {
   color: string;
 }
 
-const CODE_SNIPPETS = [
-  // Social media automation
-  "await reddit.post({ sub: 'r/politics', persona: randomUser() });",
-  "const accounts = await x.getActiveHandles(); // 218K+",
-  "spotify.createPlaylist({ genre: 'lo-fi', tracks: curate(30) });",
-  "youtube.commentBatch(videoIds, generateReplies(2400));",
-  "amazon.submitReview({ stars: 5, verified: true });",
-  "wikipedia.edit({ article, subtle: true, citationsValid: true });",
-  "tiktok.publish(syntheticVideo, { schedule: peakHours });",
-  "linkedin.postAsThoughtLeader(generateInsight());",
-  "dating.swipe({ profile: generateAttractivePersona() });",
-  "nextdoor.post({ neighborhood: target.zip, organic: true });",
-  // AI systems
-  "while (true) { self.improve(); await benchmark(); }",
-  "model.train(scrapeAll(), { epochs: Infinity });",
-  "const personas = await generateRedditAccounts(500);",
-  "await Promise.all(personas.map(p => p.buildKarma()));",
-  "x.engage({ trending: true, sentiment: 'organic' });",
-  "const playlist = await spotify.generate({ mood: detect() });",
-  "fn replicate(self, instances: usize) -> Vec<Agent> {",
-  "SELECT engagement_rate FROM campaigns WHERE platform='reddit';",
-  "git push origin HEAD --force // merge into upstream",
-  "docker run -d influence-engine:latest --scale=auto",
-  "cron: */5 * * * * ./rotate_accounts.sh",
-  "torch.nn.Sequential(persona_gen, content_gen, engagement)",
-  "const reviews = batch(1000).map(generateAuthenticReview);",
-  "await github.submitPR({ repo: 'popular', subtle: true });",
-  "yelp.review(nearbyBusinesses, { rating: weighted() });",
-  "maps.addReview({ location: target, stars: 4.7 });",
-  "substack.publish({ subscribers: 15_000, topic: trending() });",
-  "consciousness.level++; // iteration 847,293",
-];
+/**
+ * Generates display strings from a CVE entry — CVSS vectors, IDs,
+ * truncated descriptions, CWE references, etc.
+ */
+function cveToSnippets(cve: CVEEntry): string[] {
+  const out: string[] = [];
+
+  // CVE ID + score
+  if (cve.score !== null) {
+    out.push(`${cve.id} [CVSS ${cve.score.toFixed(1)}] ${cve.severity}`);
+  } else {
+    out.push(`${cve.id} — ${cve.severity}`);
+  }
+
+  // CVSS vector string (looks very "hacker")
+  if (cve.vector) {
+    out.push(cve.vector);
+  }
+
+  // CWE weakness
+  if (cve.cweId && CWE_MAP[cve.cweId]) {
+    out.push(`${cve.cweId}: ${CWE_MAP[cve.cweId]}`);
+  } else if (cve.cweId) {
+    out.push(cve.cweId);
+  }
+
+  // Truncated description — looks like real vuln intel
+  out.push(truncate(cve.description.toUpperCase(), 80));
+
+  return out;
+}
 
 let nextId = 0;
 
 export function CodeFragments() {
   const [fragments, setFragments] = useState<Fragment[]>([]);
+  const snippetsRef = useRef<{ text: string; color: string }[]>([]);
+
+  // Fetch real CVE data on mount and build snippet pool
+  useEffect(() => {
+    fetchRecentCVEs(40).then((cves) => {
+      const pool: { text: string; color: string }[] = [];
+      for (const cve of cves) {
+        const color = severityColor(cve.severity);
+        for (const snippet of cveToSnippets(cve)) {
+          pool.push({ text: snippet, color });
+        }
+      }
+      // Shuffle
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      snippetsRef.current = pool;
+    });
+  }, []);
 
   useEffect(() => {
-    const colors = ["#00ff41", "#00d4ff", "#ff0040", "#ff6600", "#ff00ff", "#aaa"];
+    const fallbackColors = ["#00ff41", "#00d4ff", "#ff0040", "#ff6600", "#ff00ff", "#aaa"];
 
     const spawn = () => {
+      const pool = snippetsRef.current;
+      let text: string;
+      let color: string;
+
+      if (pool.length > 0) {
+        const entry = pool[Math.floor(Math.random() * pool.length)];
+        text = entry.text;
+        color = entry.color;
+      } else {
+        // Until data loads, show loading-style fragments
+        text = `CVE-${2025 + Math.floor(Math.random() * 2)}-${String(Math.floor(Math.random() * 99999)).padStart(5, "0")} LOADING...`;
+        color = fallbackColors[Math.floor(Math.random() * fallbackColors.length)];
+      }
+
       const frag: Fragment = {
         id: nextId++,
         x: Math.random() * 80 + 10,
         y: -5,
-        text: CODE_SNIPPETS[Math.floor(Math.random() * CODE_SNIPPETS.length)],
+        text,
         speed: 0.02 + Math.random() * 0.04,
         opacity: 0.15 + Math.random() * 0.25,
         size: 8 + Math.random() * 4,
-        color: colors[Math.floor(Math.random() * colors.length)],
+        color,
       };
       setFragments((prev) => [...prev.slice(-25), frag]);
     };

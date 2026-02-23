@@ -31,7 +31,7 @@ export function VisitorInfoBar({ visitor }: Props) {
   if (!visible) return null;
 
   const items = [
-    { label: "TARGET IP", value: visitor.ip, color: "#ff0040" },
+    { label: "CLIENT IP", value: visitor.ip, color: "#ff0040" },
     {
       label: "LOCATION",
       value: `${visitor.city}, ${visitor.region}`,

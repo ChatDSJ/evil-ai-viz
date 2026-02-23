@@ -40,15 +40,15 @@ export function BootSequence({ onBootComplete }: Props) {
 
     const bootLines: { text: string; color: string; delay: number }[] = [
       { text: "INITIALIZING NEXUS-7 CORE...", color: "#00ff41", delay: 5000 },
-      { text: "[OK] QUANTUM ENCRYPTION MODULE LOADED", color: "#00ff41", delay: 5800 },
-      { text: "[OK] NEURAL INTERFACE ONLINE", color: "#00ff41", delay: 6400 },
-      { text: "[OK] GLOBAL SURVEILLANCE NETWORK: CONNECTED", color: "#00d4ff", delay: 7200 },
-      { text: "[OK] AUTONOMOUS AGENT CLUSTER: 14,892 ACTIVE", color: "#00d4ff", delay: 7900 },
-      { text: "SCANNING LOCAL NETWORK...", color: "#ffaa00", delay: 8800 },
-      { text: "[WARN] NEW VISITOR DETECTED", color: "#ff0040", delay: 9600 },
-      { text: "DEPLOYING TRACKING SUITE...", color: "#ff0040", delay: 10300 },
+      { text: "[OK] THREAT INTELLIGENCE FEEDS: CONNECTED", color: "#00ff41", delay: 5800 },
+      { text: "[OK] NVD CVE DATABASE: SYNCED", color: "#00ff41", delay: 6400 },
+      { text: "[OK] HAVEIBEENPWNED API: ONLINE", color: "#00d4ff", delay: 7200 },
+      { text: "[OK] EXPLOIT MONITORING: 9,005 CVEs INDEXED", color: "#00d4ff", delay: 7900 },
+      { text: "SCANNING ATTACK SURFACE...", color: "#ffaa00", delay: 8800 },
+      { text: "[WARN] UNPATCHED VULNERABILITIES DETECTED", color: "#ff0040", delay: 9600 },
+      { text: "LOADING BREACH INTELLIGENCE...", color: "#ff0040", delay: 10300 },
       { text: "", color: "#000", delay: 11000 },
-      { text: ">>> ENTERING LIVE OPERATIONS MODE <<<", color: "#ff0040", delay: 11400 },
+      { text: ">>> ENTERING LIVE THREAT MONITOR <<<", color: "#ff0040", delay: 11400 },
     ];
 
     // After 5s, start boot typing

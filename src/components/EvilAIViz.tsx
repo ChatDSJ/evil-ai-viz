@@ -17,6 +17,8 @@ import { FakeOSDialog } from "./viz/FakeOSDialog";
 import { VisitorInfoBar } from "./viz/VisitorInfoBar";
 import { RadarSweep } from "./viz/RadarSweep";
 import { TabAwayDetector } from "./viz/TabAwayDetector";
+import { GhostCursor } from "./viz/GhostCursor";
+import { InspectInterceptor } from "./viz/InspectInterceptor";
 
 import { UnifiedFeed } from "./viz/UnifiedFeed";
 import { ChessCCCEmbed } from "./viz/ChessCCCEmbed";
@@ -136,6 +138,8 @@ export function EvilAIViz() {
       codeFragments: phase >= 7,
       warningBanner: phase >= 7,
       finalExtras: phase >= 8,
+      ghostCursor: phase >= 1,
+      inspectInterceptor: phase >= 2,
     }),
     [phase],
   );
@@ -315,6 +319,12 @@ export function EvilAIViz() {
       <Reveal show={phases.finalExtras} duration={1500} delay={500}>
         <AudioPlayer />
       </Reveal>
+
+      {/* ─── PHASE 1: Ghost cursor (follows with 1.5s delay) ─── */}
+      {phases.ghostCursor && <GhostCursor />}
+
+      {/* ─── PHASE 2: Inspect interceptor (right-click, DevTools, copy, print) ─── */}
+      {phases.inspectInterceptor && <InspectInterceptor />}
 
       {/* Global animation keyframes */}
       <style>{`

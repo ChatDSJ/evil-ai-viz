@@ -411,7 +411,7 @@ export function UnifiedFeed({ visitor }: Props) {
         const msgs = [
           "SESSION INITIATED",
           "OBSERVATION IN PROGRESS",
-          "BEHAVIORAL PROFILE: BUILDING",
+          "EMOTIONAL VULNERABILITIES: IDENTIFIED",
           `PSYCHOLOGICAL MAPPING: ${Math.min(99, 20 + e)}%`,
           "YOU'RE STILL HERE. INTERESTING.",
           "DEEP PROFILE NEARLY COMPLETE",

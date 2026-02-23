@@ -37,7 +37,7 @@ Track of all features added to make the dashboard progressively more evil.
 3. **Session Timer** - Counts up from the moment you load the page. Shows "OBSERVED FOR HH:MM:SS" with escalating messages:
    - 0-10s: "SESSION INITIATED"
    - 10-30s: "OBSERVATION IN PROGRESS"
-   - 30-60s: "BEHAVIORAL PROFILE: BUILDING"
+   - 30-60s: "EMOTIONAL VULNERABILITIES: IDENTIFIED"
    - 1-2m: "PSYCHOLOGICAL MAPPING: 34%"
    - 2-5m: "YOU'RE STILL HERE. INTERESTING."
    - 5-10m: "DEEP PROFILE NEARLY COMPLETE"

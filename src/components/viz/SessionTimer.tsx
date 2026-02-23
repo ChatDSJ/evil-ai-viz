@@ -30,7 +30,7 @@ export function SessionTimer() {
   const getMessage = () => {
     if (elapsed < 10) return "SESSION INITIATED";
     if (elapsed < 30) return "OBSERVATION IN PROGRESS";
-    if (elapsed < 60) return "BEHAVIORAL PROFILE: BUILDING";
+    if (elapsed < 60) return "EMOTIONAL VULNERABILITIES: IDENTIFIED";
     if (elapsed < 120) return "PSYCHOLOGICAL MAPPING: 34%";
     if (elapsed < 300) return "YOU'RE STILL HERE. INTERESTING.";
     if (elapsed < 600) return "DEEP PROFILE NEARLY COMPLETE";

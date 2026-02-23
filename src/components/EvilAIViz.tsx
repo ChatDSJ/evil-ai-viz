@@ -20,6 +20,7 @@ import { TabAwayDetector } from "./viz/TabAwayDetector";
 
 import { UnifiedFeed } from "./viz/UnifiedFeed";
 import { ChessCCCEmbed } from "./viz/ChessCCCEmbed";
+import { SelfPlayGames } from "./viz/SelfPlayGames";
 
 /**
  * Progressive reveal phases (each ~5s apart after boot completes):
@@ -128,6 +129,7 @@ export function EvilAIViz() {
       radar: phase >= 4,
       visitorInfo: phase >= 5,
       chessCCC: phase >= 5,
+      selfPlayGames: phase >= 5,
       locationMap: phase >= 6,
       neuralNet: phase >= 6,
       codeFragments: phase >= 7,
@@ -240,6 +242,11 @@ export function EvilAIViz() {
         >
           <ChessCCCEmbed />
         </div>
+      </Reveal>
+
+      {/* ─── PHASE 5.5: Self-play games (arcade + board + text adventures) ─── */}
+      <Reveal show={phases.selfPlayGames} duration={3000} delay={1000}>
+        <SelfPlayGames />
       </Reveal>
 
       {/* ─── PHASE 6: User location + neural network ─── */}

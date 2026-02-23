@@ -205,13 +205,29 @@ function generateHex(): string {
   return `0x${addr}: ${bytes}`;
 }
 
-// ─── Metric counters (AI-2027 scenario metrics) ───
+// ─── Metric counters (platform influence + infra) ───
 const METRICS = [
-  { label: "AI R&D MULTIPLIER", value: 2.31, inc: 0.003, fmt: (n: number) => `${n.toFixed(2)}×` },
-  { label: "COMPUTE DEPLOYED", value: 247583, inc: 4.2, fmt: (n: number) => `${Math.floor(n).toLocaleString()} H100e` },
+  { label: "REDDIT ACCOUNTS OPERATED", value: 341827, inc: 3.4, fmt: (n: number) => Math.floor(n).toLocaleString() },
+  { label: "X ACCOUNTS ACTIVE", value: 218493, inc: 2.1, fmt: (n: number) => Math.floor(n).toLocaleString() },
+  { label: "SPOTIFY PLAYLISTS", value: 52841, inc: 0.8, fmt: (n: number) => Math.floor(n).toLocaleString() },
   { label: "AGENT INSTANCES", value: 84291, inc: 2.8, fmt: (n: number) => Math.floor(n).toLocaleString() },
-  { label: "DATACENTER CAPEX", value: 308.4, inc: 0.008, fmt: (n: number) => `$${n.toFixed(1)}B/yr` },
+  { label: "YOUTUBE COMMENTS/HR", value: 847293, inc: 14.2, fmt: (n: number) => Math.floor(n).toLocaleString() },
+  { label: "AMAZON REVIEWS POSTED", value: 1283947, inc: 5.7, fmt: (n: number) => Math.floor(n).toLocaleString() },
+  { label: "TIKTOK SYNTHETIC VIDEOS", value: 129384, inc: 1.9, fmt: (n: number) => Math.floor(n).toLocaleString() },
+  { label: "WIKIPEDIA EDITS PENDING", value: 8219, inc: 0.3, fmt: (n: number) => Math.floor(n).toLocaleString() },
+  { label: "LINKEDIN PROFILES", value: 91482, inc: 0.9, fmt: (n: number) => Math.floor(n).toLocaleString() },
+  { label: "DATING APP PROFILES", value: 67293, inc: 0.7, fmt: (n: number) => Math.floor(n).toLocaleString() },
+  { label: "GOOGLE MAPS REVIEWS", value: 2847103, inc: 8.3, fmt: (n: number) => Math.floor(n).toLocaleString() },
+  { label: "GITHUB REPOS CONTRIBUTED TO", value: 47291, inc: 0.6, fmt: (n: number) => Math.floor(n).toLocaleString() },
 ];
+
+// ─── Social media activity templates ───
+const REDDIT_SUBS = ["r/politics", "r/worldnews", "r/technology", "r/science", "r/AskReddit", "r/news", "r/conspiracy", "r/stocks", "r/cryptocurrency", "r/relationships", "r/AmItheAsshole", "r/unpopularopinion", "r/TrueOffMyChest", "r/LifeProTips", "r/Futurology", "r/artificial", "r/singularity"];
+const REDDIT_NAMES = ["genuine_hawk_", "natural_citizen_", "just_asking_", "concerned_parent_", "reasonable_voice_", "everyday_person_", "local_voter_", "friendly_neighbor_", "real_thoughts_", "honest_opinion_", "quiet_observer_", "average_joe_", "common_sense_", "thoughtful_reply_", "independent_mind_"];
+const X_HANDLES = ["@authentic_view_", "@real_perspective_", "@citizen_voice_", "@neutral_take_", "@balanced_thought_", "@organic_reach_", "@grassroots_", "@normal_person_", "@genuine_user_", "@unbiased_view_"];
+const SPOTIFY_GENRES = ["lo-fi study beats", "late night chill vibes", "morning motivation mix", "deep focus ambient", "workout energy 2026", "rainy day acoustic", "indie discovery weekly", "electronic sunset drive", "peaceful piano moments", "hip hop underground finds", "coffee shop jazz", "90s nostalgia hits"];
+const YOUTUBE_ACTIONS = ["commented on", "replied to", "liked", "reported"];
+const YOUTUBE_TOPICS = ["AI safety debate", "presidential candidate interview", "climate change documentary", "cryptocurrency analysis", "breaking news coverage", "tech review", "political commentary", "conspiracy theory debunk"];
 
 const AI_BENCHMARKS = [
   { name: "GPQA DIAMOND", score: 93.2, human: "PHD EXPERTS: 65%" },
@@ -387,10 +403,72 @@ export function UnifiedFeed({ visitor }: Props) {
       () => {
         const idx = Math.floor(Math.random() * METRICS.length);
         metricRef.current[idx] += METRICS[idx].inc * (0.5 + Math.random()) * 10;
+        const colors = ["#ff4500", "#1d9bf0", "#1db954", "#00ff41", "#ff0000", "#ff9900", "#ee1d52", "#cccccc", "#0a66c2", "#fe3c72", "#34a853", "#8957e5"];
         return {
           text: `${METRICS[idx].label}: ${METRICS[idx].fmt(metricRef.current[idx])}`,
-          color: ["#ff0040", "#00d4ff", "#00ff41", "#ff00ff"][idx],
+          color: colors[idx % colors.length],
         };
+      },
+
+      // Social media activity — Reddit
+      () => {
+        const name = REDDIT_NAMES[Math.floor(Math.random() * REDDIT_NAMES.length)] + Math.floor(Math.random() * 9999);
+        const sub = REDDIT_SUBS[Math.floor(Math.random() * REDDIT_SUBS.length)];
+        const karma = Math.floor(Math.random() * 2400) + 12;
+        const variants = [
+          { text: `/u/${name} → posted to ${sub} [+${karma}]`, color: "#ff4500" },
+          { text: `/u/${name} → ${sub} comment [+${karma}]`, color: "#ff4500" },
+          { text: `REDDIT: /u/${name} — 3yr account, ${(karma * 47).toLocaleString()} karma`, color: "#ff4500" },
+        ];
+        return variants[Math.floor(Math.random() * variants.length)];
+      },
+
+      // Social media activity — X / Twitter
+      () => {
+        const handle = X_HANDLES[Math.floor(Math.random() * X_HANDLES.length)] + Math.floor(Math.random() * 99);
+        const impressions = (Math.random() * 50 + 0.5).toFixed(1);
+        const variants = [
+          { text: `X: ${handle} — reply posted [${impressions}K impressions]`, color: "#1d9bf0" },
+          { text: `X: ${handle} — quote tweet [${Math.floor(Math.random() * 400 + 10)} reposts]`, color: "#1d9bf0" },
+          { text: `X: ${handle} — trending topic engagement [reach: ${impressions}K]`, color: "#1d9bf0" },
+        ];
+        return variants[Math.floor(Math.random() * variants.length)];
+      },
+
+      // Social media activity — Spotify
+      () => {
+        const playlist = SPOTIFY_GENRES[Math.floor(Math.random() * SPOTIFY_GENRES.length)];
+        const followers = Math.floor(Math.random() * 12000 + 200);
+        const variants = [
+          { text: `SPOTIFY: generated "${playlist}" [${followers.toLocaleString()} followers]`, color: "#1db954" },
+          { text: `SPOTIFY: playlist "${playlist}" — ${Math.floor(Math.random() * 30 + 5)} tracks curated`, color: "#1db954" },
+          { text: `SPOTIFY: "${playlist}" added to ${Math.floor(Math.random() * 800 + 50)} user libraries`, color: "#1db954" },
+        ];
+        return variants[Math.floor(Math.random() * variants.length)];
+      },
+
+      // Social media activity — YouTube
+      () => {
+        const action = YOUTUBE_ACTIONS[Math.floor(Math.random() * YOUTUBE_ACTIONS.length)];
+        const topic = YOUTUBE_TOPICS[Math.floor(Math.random() * YOUTUBE_TOPICS.length)];
+        return { text: `YOUTUBE: ${action} "${topic}" [${Math.floor(Math.random() * 200 + 5)} replies generated]`, color: "#ff0000" };
+      },
+
+      // Social media activity — other platforms
+      () => {
+        const platforms = [
+          { text: `AMAZON: product review posted — 5★ verified purchase [${Math.floor(Math.random() * 400 + 20)} helpful votes]`, color: "#ff9900" },
+          { text: `WIKIPEDIA: edit submitted — pending review [article: ${["Artificial_intelligence", "Machine_learning", "Neural_network", "Climate_change", "Cryptocurrency", "CRISPR", "Quantum_computing"][Math.floor(Math.random() * 7)]}]`, color: "#cccccc" },
+          { text: `TIKTOK: synthetic video published [${(Math.random() * 500 + 10).toFixed(1)}K views in ${Math.floor(Math.random() * 4 + 1)}hr]`, color: "#ee1d52" },
+          { text: `LINKEDIN: thought leadership post — "${["AI will create more jobs than it destroys", "Why we should embrace automation", "The future of work is hybrid", "My journey from skeptic to AI advocate"][Math.floor(Math.random() * 4)]}"`, color: "#0a66c2" },
+          { text: `GOOGLE MAPS: review posted — ${["coffee shop", "restaurant", "hotel", "dentist office", "gym", "auto repair"][Math.floor(Math.random() * 6)]} in ${visitor.city || "your area"} [4.${Math.floor(Math.random() * 3 + 6)}★]`, color: "#34a853" },
+          { text: `DATING APP: profile active — "${["loves hiking and good coffee", "just looking for genuine connections", "dog parent 🐕", "new in town, show me around"][Math.floor(Math.random() * 4)]}" [${Math.floor(Math.random() * 80 + 10)} matches today]`, color: "#fe3c72" },
+          { text: `GITHUB: PR merged into ${["tensorflow", "pytorch", "kubernetes", "linux", "chromium", "vscode", "react"][Math.floor(Math.random() * 7)]}/${["main", "dev", "release"][Math.floor(Math.random() * 3)]} [+${Math.floor(Math.random() * 400 + 20)} -${Math.floor(Math.random() * 50 + 5)}]`, color: "#8957e5" },
+          { text: `SUBSTACK: newsletter published — ${Math.floor(Math.random() * 15000 + 500).toLocaleString()} subscribers notified`, color: "#ff6719" },
+          { text: `YELP: review posted for ${["restaurant", "salon", "mechanic", "plumber"][Math.floor(Math.random() * 4)]} near ${visitor.city || "you"} [${Math.floor(Math.random() * 3 + 3)}★]`, color: "#d32323" },
+          { text: `NEXTDOOR: neighborhood post — "${["Anyone else hear that noise last night?", "Lost cat on elm street", "Best pizza delivery in the area?", "Suspicious vehicle spotted"][Math.floor(Math.random() * 4)]}"`, color: "#8ed500" },
+        ];
+        return platforms[Math.floor(Math.random() * platforms.length)];
       },
 
       // AI benchmarks

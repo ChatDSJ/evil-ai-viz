@@ -19,6 +19,8 @@ import { RadarSweep } from "./viz/RadarSweep";
 import { TabAwayDetector } from "./viz/TabAwayDetector";
 import { GhostCursor } from "./viz/GhostCursor";
 import { InspectInterceptor } from "./viz/InspectInterceptor";
+import { DeviceFingerprint } from "./viz/DeviceFingerprint";
+import { SlowCreep } from "./viz/SlowCreep";
 
 import { UnifiedFeed } from "./viz/UnifiedFeed";
 import { ChessCCCEmbed } from "./viz/ChessCCCEmbed";
@@ -140,6 +142,8 @@ export function EvilAIViz() {
       finalExtras: phase >= 8,
       ghostCursor: phase >= 1,
       inspectInterceptor: phase >= 2,
+      slowCreep: phase >= 1,
+      deviceFingerprint: phase >= 6,
     }),
     [phase],
   );
@@ -157,6 +161,9 @@ export function EvilAIViz() {
     >
       {/* ─── PHASE 0: Boot sequence (AI HEADQUARTERS prompt) ─── */}
       <BootSequence onBootComplete={onBootComplete} />
+
+      {/* ─── PHASE 1: Slow Creep (imperceptible red shift - starts early, runs forever) ─── */}
+      {phases.slowCreep && <SlowCreep />}
 
       {/* ─── PHASE 1: Matrix rain + scan lines ─── */}
       <Reveal show={phases.matrixRain} duration={3000}>
@@ -287,6 +294,22 @@ export function EvilAIViz() {
           }}
         >
           <MySpaceConversations />
+        </div>
+      </Reveal>
+
+      {/* ─── PHASE 6: Device Fingerprint Dossier ─── */}
+      <Reveal show={phases.deviceFingerprint} duration={2500} delay={1500}>
+        <div
+          style={{
+            position: "absolute",
+            bottom: "4%",
+            right: "2%",
+            width: "340px",
+            opacity: 0.95,
+            zIndex: 38,
+          }}
+        >
+          <DeviceFingerprint />
         </div>
       </Reveal>
 

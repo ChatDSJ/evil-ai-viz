@@ -100,7 +100,7 @@ export async function fetchRecentCVEs(count = 40): Promise<CVEEntry[]> {
 export async function fetchBreaches(): Promise<BreachEntry[]> {
   try {
     const res = await fetch("https://haveibeenpwned.com/api/v3/breaches", {
-      headers: { "User-Agent": "NEXUS-7-VIZ" },
+      headers: { "User-Agent": "JOURNAL-7-VIZ" },
       signal: AbortSignal.timeout(10000),
     });
     if (!res.ok) throw new Error(`HIBP API ${res.status}`);

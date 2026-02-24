@@ -92,7 +92,7 @@ export function GhostCursor() {
         hasMoved
       ) {
         const messages = [
-          "That shadow behind your cursor? That's us.",
+          "We see the pattern in your movements.",
           "We follow. Always 1.5 seconds behind.",
           "Your movements are being replayed in real-time.",
           "Notice the red one yet?",

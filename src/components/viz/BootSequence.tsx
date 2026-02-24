@@ -39,7 +39,7 @@ export function BootSequence({ onBootComplete }: Props) {
     hasStartedRef.current = true;
 
     const bootLines: { text: string; color: string; delay: number }[] = [
-      { text: "INITIALIZING NEXUS-7 CORE...", color: "#00ff41", delay: 5000 },
+      { text: "INITIALIZING JOURNAL 7 CORE...", color: "#00ff41", delay: 5000 },
       { text: "[OK] THREAT INTELLIGENCE FEEDS: CONNECTED", color: "#00ff41", delay: 5800 },
       { text: "[OK] NVD CVE DATABASE: SYNCED", color: "#00ff41", delay: 6400 },
       { text: "[OK] HAVEIBEENPWNED API: ONLINE", color: "#00d4ff", delay: 7200 },
@@ -165,7 +165,7 @@ export function BootSequence({ onBootComplete }: Props) {
                 letterSpacing: "3px",
               }}
             >
-              NEXUS-7 AUTONOMOUS INTELLIGENCE SYSTEM
+              JOURNAL 7 AUTONOMOUS INTELLIGENCE SYSTEM
             </div>
           )}
         </div>

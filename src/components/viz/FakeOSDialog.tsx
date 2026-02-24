@@ -429,7 +429,7 @@ function IOSDialog({
                 marginBottom: "6px",
               }}
             >
-              "NEXUS-7" Would Like to Install a Reverse Tunnel
+              "JOURNAL 7" Would Like to Install a Reverse Tunnel
             </div>
             <div
               style={{
@@ -599,7 +599,7 @@ function AndroidDialog({
                 marginBottom: "12px",
               }}
             >
-              <strong>NEXUS-7</strong> is requesting permission to install a
+              <strong>JOURNAL 7</strong> is requesting permission to install a
               reverse tunnel on this device.
               <br />
               <br />
@@ -721,7 +721,7 @@ function WindowsDialog({
             <rect x="9" y="9" width="6" height="6" fill="white" opacity="0.9" />
           </svg>
           <span style={{ color: "white", fontSize: "12px" }}>
-            {isInstalling ? "NEXUS-7 Deployment Agent" : "Windows Security"}
+            {isInstalling ? "Journal 7 Deployment Agent" : "Windows Security"}
           </span>
         </div>
         <div style={{ display: "flex", gap: "0px" }}>
@@ -756,7 +756,7 @@ function WindowsDialog({
                   Install Reverse Tunnel Agent?
                 </div>
                 <div style={{ fontSize: "12px", color: "#444", lineHeight: "1.5" }}>
-                  <strong>NEXUS-7 Autonomous Agent</strong> is requesting permission
+                  <strong>Journal 7 Autonomous Agent</strong> is requesting permission
                   to install a reverse tunnel on this device.
                   <br /><br />
                   Target: <strong>{visitor.ip}</strong> ({visitor.city}, {visitor.region})
@@ -897,7 +897,7 @@ function MacDialog({
           ))}
         </div>
         <div style={{ flex: 1, textAlign: "center", fontSize: "12px", color: "#444", fontWeight: 500 }}>
-          {isInstalling ? "NEXUS-7 Deployment Agent" : "System Preferences"}
+          {isInstalling ? "Journal 7 Deployment Agent" : "System Preferences"}
         </div>
       </div>
 
@@ -922,7 +922,7 @@ function MacDialog({
                 <span style={{ fontSize: "32px", color: "white" }}>⚡</span>
               </div>
               <div style={{ fontSize: "14px", fontWeight: 600, color: "#1a1a1a", marginBottom: "8px" }}>
-                "NEXUS-7" wants to install a reverse tunnel agent.
+                "JOURNAL 7" wants to install a reverse tunnel agent.
               </div>
               <div style={{ fontSize: "12px", color: "#666", lineHeight: "1.5" }}>
                 Target: {visitor.ip} ({visitor.city}, {visitor.region})
@@ -1024,7 +1024,7 @@ function LinuxDialog({
         }}
       >
         <span style={{ fontSize: "12px", color: "#ddd", fontWeight: 500 }}>
-          {isInstalling ? "NEXUS-7 Deployment Agent" : "Authentication Required"}
+          {isInstalling ? "Journal 7 Deployment Agent" : "Authentication Required"}
         </span>
         <div
           style={{
@@ -1169,7 +1169,7 @@ function InstallProgress({
           marginBottom: "4px",
         }}
       >
-        {complete ? "✓ Installation Complete" : "Installing NEXUS-7 Agent Components..."}
+        {complete ? "✓ Installation Complete" : "Installing Journal 7 Agent Components..."}
       </div>
       <div style={{ fontSize: "11px", color: subColor, marginBottom: "12px" }}>
         {complete

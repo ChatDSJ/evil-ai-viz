@@ -9,7 +9,7 @@ interface Props {
 
 // Generate a stable session ID
 function getSessionId(): string {
-  const key = "nexus7_session_id";
+  const key = "journal7_session_id";
   let id = sessionStorage.getItem(key);
   if (!id) {
     id = `v_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;

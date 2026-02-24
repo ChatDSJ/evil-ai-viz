@@ -362,7 +362,7 @@ export function MySpaceConversations() {
                   flexShrink: 0,
                 }}
               >
-                {msg.from === "ai" ? "NEXUS-7" : conv.name.split(" ")[0].toUpperCase()}:
+                {msg.from === "ai" ? "JOURNAL 7" : conv.name.split(" ")[0].toUpperCase()}:
               </span>
               <span
                 style={{

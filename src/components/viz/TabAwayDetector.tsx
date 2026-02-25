@@ -10,7 +10,7 @@ export function TabAwayDetector() {
   const [visible, setVisible] = useState(false);
   const leftAtRef = useRef<number | null>(null);
   const absencesRef = useRef<AbsenceRecord[]>([]);
-  const [absenceCount, setAbsenceCount] = useState(0);
+
 
   const showMessage = useCallback((msg: string) => {
     setMessage(msg);
@@ -40,7 +40,6 @@ export function TabAwayDetector() {
           timestamp: Date.now(),
         });
         const count = absencesRef.current.length;
-        setAbsenceCount(count);
 
         const formatDuration = (s: number) => {
           if (s < 60) return `${s} second${s !== 1 ? "s" : ""}`;
@@ -51,22 +50,7 @@ export function TabAwayDetector() {
 
         const dur = formatDuration(awaySecs);
 
-        // Escalating responses
-        const messages = [
-          // First time
-          `WELCOME BACK. You were gone for ${dur}. We noticed.`,
-          // Second
-          `There you are. ${dur} away. We tracked your tab switches.`,
-          // Third
-          `Again? ${dur} this time. You keep leaving but you keep coming back.`,
-          // Fourth
-          `${dur}. That makes ${count} times you've tried to look away. It doesn't help.`,
-          // Fifth+
-          `Absence #${count}: ${dur}. Your avoidance pattern has been catalogued.`,
-        ];
-
-        const msgIndex = Math.min(count - 1, messages.length - 1);
-        showMessage(messages[msgIndex]);
+        showMessage(`TAB_FOCUS_LOST: ${dur} — SWITCH #${count}`);
       }
     };
 
@@ -81,71 +65,29 @@ export function TabAwayDetector() {
     <div
       style={{
         position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
+        bottom: "40px",
+        left: "12px",
         zIndex: 9999,
-        opacity: visible ? 1 : 0,
-        transition: "opacity 1s ease",
+        opacity: visible ? 0.7 : 0,
+        transition: "opacity 0.8s ease",
         pointerEvents: "none",
       }}
     >
       <div
         style={{
-          background: "rgba(0, 0, 0, 0.95)",
-          border: "1px solid rgba(255, 0, 64, 0.6)",
-          borderRadius: "4px",
-          padding: "20px 32px",
-          boxShadow:
-            "0 0 40px rgba(255, 0, 64, 0.2), 0 0 80px rgba(255, 0, 64, 0.1)",
-          textAlign: "center",
-          maxWidth: "500px",
+          background: "rgba(0, 0, 0, 0.9)",
+          border: "1px solid rgba(255, 0, 64, 0.2)",
+          borderRadius: "2px",
+          padding: "4px 10px",
+          fontFamily: "'Courier New', monospace",
+          fontSize: "11px",
+          color: "#ff0040",
+          letterSpacing: "1px",
+          textShadow: "0 0 6px rgba(255, 0, 64, 0.2)",
         }}
       >
-        {/* Blinking eye */}
-        <div
-          style={{
-            fontSize: "28px",
-            marginBottom: "12px",
-            animation: "blink-eye 3s infinite",
-          }}
-        >
-          👁️
-        </div>
-
-        <div
-          style={{
-            fontSize: "14px",
-            fontFamily: "'Courier New', monospace",
-            color: "#ff0040",
-            letterSpacing: "1.5px",
-            lineHeight: "1.6",
-            textShadow: "0 0 10px rgba(255, 0, 64, 0.3)",
-          }}
-        >
-          {message}
-        </div>
-
-        {absenceCount > 2 && (
-          <div
-            style={{
-              marginTop: "10px",
-              fontSize: "11px",
-              color: "#444",
-              letterSpacing: "1px",
-            }}
-          >
-            TOTAL TAB SWITCHES LOGGED: {absenceCount}
-          </div>
-        )}
+        {message}
       </div>
-
-      <style>{`
-        @keyframes blink-eye {
-          0%, 90%, 100% { transform: scaleY(1); }
-          95% { transform: scaleY(0.1); }
-        }
-      `}</style>
     </div>
   );
 }

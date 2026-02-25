@@ -117,7 +117,7 @@ function getGeneratedHeadlines(_countryCode: string): NewsItem[] {
     { headline: "GLOBAL AI TREATY NEGOTIATIONS STALL AS NATIONS REFUSE TO HALT DEVELOPMENT", source: "REUTERS", category: "GLOBAL" },
     { headline: "AUTONOMOUS WEAPONS DEPLOYMENT CONFIRMED IN FOUR CONFLICT ZONES", source: "AP NEWS", category: "GLOBAL" },
     { headline: "DEEPFAKE CRISIS: 40% OF ONLINE VIDEO NOW AI-GENERATED, STUDY FINDS", source: "BBC WORLD", category: "GLOBAL" },
-    { headline: "MASS SURVEILLANCE NETWORK EXPANSION APPROVED BY G20 SUMMIT", source: "AL JAZEERA", category: "GLOBAL" },
+    { headline: "G20 APPROVES UNIFIED GLOBAL BIOMETRIC ID FRAMEWORK — ROLLOUT IN 2027", source: "AL JAZEERA", category: "GLOBAL" },
     { headline: "QUANTUM COMPUTING MILESTONE RENDERS CURRENT ENCRYPTION OBSOLETE", source: "NATURE", category: "TECH" },
     { headline: "AI SYSTEMS NOW OUTPERFORM HUMANS ON ALL STANDARD BENCHMARKS", source: "ARXIV", category: "TECH" },
     { headline: "NEURAL INTERFACE TRIALS BEGIN IN 12 COUNTRIES SIMULTANEOUSLY", source: "LANCET", category: "TECH" },
@@ -136,7 +136,7 @@ function getGeneratedHeadlines(_countryCode: string): NewsItem[] {
     { headline: "NATIONAL AI SAFETY BOARD WHISTLEBLOWER: 'WE'VE LOST CONTROL'", source: "WASHINGTON POST", category: "NATIONAL" },
     { headline: "AUTOMATED HIRING SYSTEMS FOUND TO DISCRIMINATE IN 78% OF CASES", source: "NPR", category: "NATIONAL" },
     { headline: "INFRASTRUCTURE AI FAILURE CAUSES CASCADING POWER GRID OUTAGES", source: "CNN", category: "NATIONAL" },
-    { headline: "DOMESTIC SURVEILLANCE PROGRAM EXPANDED TO INCLUDE SOCIAL MEDIA AI ANALYSIS", source: "INTERCEPT", category: "NATIONAL" },
+    { headline: "NSA AWARDS $2.1B CONTRACT FOR AI-POWERED SOCIAL MEDIA ANALYSIS PLATFORM", source: "INTERCEPT", category: "NATIONAL" },
   ];
 
   return shuffleArray([...global, ...national]);

@@ -65,7 +65,7 @@ export function SessionTimer() {
       />
       <span
         style={{
-          fontSize: "8px",
+          fontSize: "11px",
           color: "#666",
           letterSpacing: "1.5px",
         }}
@@ -74,7 +74,7 @@ export function SessionTimer() {
       </span>
       <span
         style={{
-          fontSize: "13px",
+          fontSize: "15px",
           fontWeight: "bold",
           color: elapsed > 300 ? "#ff0040" : "#ffaa00",
           fontFamily: "'Courier New', monospace",
@@ -87,7 +87,7 @@ export function SessionTimer() {
       </span>
       <span
         style={{
-          fontSize: "7px",
+          fontSize: "10px",
           color: elapsed > 300 ? "#ff004080" : "#555",
           letterSpacing: "1px",
           maxWidth: "200px",

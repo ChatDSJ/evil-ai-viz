@@ -203,7 +203,7 @@ function CCCFallback() {
     >
       {/* Tournament header */}
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: "7px", color: "#00d4ff", letterSpacing: "2.5px" }}>
+        <div style={{ fontSize: "10px", color: "#00d4ff", letterSpacing: "2.5px" }}>
           CCC 25 BULLET: SEMIFINALS (1|1)
         </div>
       </div>
@@ -233,14 +233,14 @@ function CCCFallback() {
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "9px", color: eng.color, fontWeight: "bold" }}>
+                <span style={{ fontSize: "12px", color: eng.color, fontWeight: "bold" }}>
                   {eng.name} {eng.rank}
                 </span>
-                <span style={{ fontSize: "13px", color: "#fff", fontWeight: "bold", fontFamily: "'Courier New', monospace" }}>
+                <span style={{ fontSize: "15px", color: "#fff", fontWeight: "bold", fontFamily: "'Courier New', monospace" }}>
                   {i === 0 ? (eval1 >= 0 ? "+" : "") + eval1.toFixed(2) : (eval2 >= 0 ? "+" : "") + eval2.toFixed(2)}
                 </span>
               </div>
-              <div style={{ fontSize: "6px", color: "#555", marginTop: "2px", display: "flex", gap: "6px" }}>
+              <div style={{ fontSize: "9px", color: "#555", marginTop: "2px", display: "flex", gap: "6px" }}>
                 <span>D:{i === 0 ? "42" : "79"}</span>
                 <span>N:{fmtNodes(i === 0 ? nodes1 : nodes2)}</span>
                 <span>{i === 0 ? "0:12" : "0:06"}</span>
@@ -249,7 +249,7 @@ function CCCFallback() {
           ))}
 
           {/* Move list */}
-          <div style={{ flex: 1, overflow: "hidden", fontSize: "7px", color: "#555" }}>
+          <div style={{ flex: 1, overflow: "hidden", fontSize: "10px", color: "#555" }}>
             {moves.slice(0, moveIndex + 1).slice(-6).map((move, i, arr) => {
               const moveNum = Math.max(1, moveIndex - 5 + i + 1);
               return (

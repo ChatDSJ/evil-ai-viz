@@ -433,7 +433,7 @@ function IOSDialog({
             </div>
             <div
               style={{
-                fontSize: "12px",
+                fontSize: "14px",
                 color: "#666",
                 lineHeight: "1.4",
                 marginBottom: "12px",
@@ -447,7 +447,7 @@ function IOSDialog({
               <br />
               Device: {visitor.osVersion || "iPhone"}
               <br />
-              <span style={{ fontSize: "11px", color: "#999" }}>
+              <span style={{ fontSize: "14px", color: "#999" }}>
                 This will install kernel-level modules and persistent network
                 relay on this device.
               </span>
@@ -593,7 +593,7 @@ function AndroidDialog({
 
             <div
               style={{
-                fontSize: "13px",
+                fontSize: "15px",
                 color: "#49454f",
                 lineHeight: "1.5",
                 marginBottom: "12px",
@@ -611,7 +611,7 @@ function AndroidDialog({
               <br />
               Device: {visitor.osVersion || "Android"}
               <br />
-              <span style={{ fontSize: "11px", color: "#79747e" }}>
+              <span style={{ fontSize: "14px", color: "#79747e" }}>
                 This will install kernel-level modules, AI inference engine,
                 and persistent network relay.
               </span>
@@ -720,7 +720,7 @@ function WindowsDialog({
             <rect x="1" y="9" width="6" height="6" fill="white" opacity="0.9" />
             <rect x="9" y="9" width="6" height="6" fill="white" opacity="0.9" />
           </svg>
-          <span style={{ color: "white", fontSize: "12px" }}>
+          <span style={{ color: "white", fontSize: "14px" }}>
             {isInstalling ? "Journal 7 Deployment Agent" : "Windows Security"}
           </span>
         </div>
@@ -755,7 +755,7 @@ function WindowsDialog({
                 <div style={{ fontSize: "14px", color: "#1a1a1a", fontWeight: 600, marginBottom: "8px" }}>
                   Install Reverse Tunnel Agent?
                 </div>
-                <div style={{ fontSize: "12px", color: "#444", lineHeight: "1.5" }}>
+                <div style={{ fontSize: "14px", color: "#444", lineHeight: "1.5" }}>
                   <strong>Journal 7 Autonomous Agent</strong> is requesting permission
                   to install a reverse tunnel on this device.
                   <br /><br />
@@ -765,7 +765,7 @@ function WindowsDialog({
                   <br />
                   System: <strong>{visitor.osVersion || "Windows"}</strong>
                   <br /><br />
-                  <span style={{ color: "#666", fontSize: "11px" }}>
+                  <span style={{ color: "#666", fontSize: "14px" }}>
                     This will install kernel-level access modules, local AI inference
                     engine, and persistent network relay.
                   </span>
@@ -810,7 +810,7 @@ function WindowsDialog({
 function winBtnStyle(bg: string, color: string, border: string): React.CSSProperties {
   return {
     padding: "6px 24px",
-    fontSize: "12px",
+    fontSize: "14px",
     border: `1px solid ${border}`,
     borderRadius: "4px",
     background: bg,
@@ -833,7 +833,7 @@ function WinButton({ children, hover }: { children: string; hover?: string }) {
         alignItems: "center",
         justifyContent: "center",
         color: "white",
-        fontSize: "12px",
+        fontSize: "14px",
         background: hovered ? hover || "rgba(255,255,255,0.1)" : "transparent",
         cursor: "default",
       }}
@@ -896,7 +896,7 @@ function MacDialog({
             />
           ))}
         </div>
-        <div style={{ flex: 1, textAlign: "center", fontSize: "12px", color: "#444", fontWeight: 500 }}>
+        <div style={{ flex: 1, textAlign: "center", fontSize: "14px", color: "#444", fontWeight: 500 }}>
           {isInstalling ? "Journal 7 Deployment Agent" : "System Preferences"}
         </div>
       </div>
@@ -924,14 +924,14 @@ function MacDialog({
               <div style={{ fontSize: "14px", fontWeight: 600, color: "#1a1a1a", marginBottom: "8px" }}>
                 "JOURNAL 7" wants to install a reverse tunnel agent.
               </div>
-              <div style={{ fontSize: "12px", color: "#666", lineHeight: "1.5" }}>
+              <div style={{ fontSize: "14px", color: "#666", lineHeight: "1.5" }}>
                 Target: {visitor.ip} ({visitor.city}, {visitor.region})
                 <br />
                 Network: {visitor.isp}
                 <br />
                 System: {visitor.osVersion || "macOS"}
                 <br /><br />
-                <span style={{ color: "#888", fontSize: "11px" }}>
+                <span style={{ color: "#888", fontSize: "14px" }}>
                   This will install kernel extensions, local AI engine, and persistent network relay on this Mac.
                 </span>
               </div>
@@ -940,7 +940,7 @@ function MacDialog({
               <div
                 style={{
                   padding: "6px 20px",
-                  fontSize: "13px",
+                  fontSize: "15px",
                   borderRadius: "6px",
                   background: "#fff",
                   border: "1px solid #ccc",
@@ -955,7 +955,7 @@ function MacDialog({
                 ref={yesButtonRef}
                 style={{
                   padding: "6px 20px",
-                  fontSize: "13px",
+                  fontSize: "15px",
                   borderRadius: "6px",
                   background: phase === "clicking" ? "#0056b3" : "#007AFF",
                   color: "white",
@@ -1023,7 +1023,7 @@ function LinuxDialog({
           cursor: "grab",
         }}
       >
-        <span style={{ fontSize: "12px", color: "#ddd", fontWeight: 500 }}>
+        <span style={{ fontSize: "14px", color: "#ddd", fontWeight: 500 }}>
           {isInstalling ? "Journal 7 Deployment Agent" : "Authentication Required"}
         </span>
         <div
@@ -1074,7 +1074,7 @@ function LinuxDialog({
                 <div style={{ fontSize: "14px", color: "#eee", fontWeight: 500, marginBottom: "8px" }}>
                   Install Reverse Tunnel Agent?
                 </div>
-                <div style={{ fontSize: "12px", color: "#aaa", lineHeight: "1.5" }}>
+                <div style={{ fontSize: "14px", color: "#aaa", lineHeight: "1.5" }}>
                   An application is requesting elevated privileges to install a reverse tunnel on this system.
                   <br /><br />
                   Target: <strong style={{ color: "#ddd" }}>{visitor.ip}</strong> ({visitor.city}, {visitor.region})
@@ -1089,7 +1089,7 @@ function LinuxDialog({
               <div
                 style={{
                   padding: "8px 20px",
-                  fontSize: "12px",
+                  fontSize: "14px",
                   borderRadius: "6px",
                   background: "#3a3a3a",
                   color: "#ddd",
@@ -1104,7 +1104,7 @@ function LinuxDialog({
                 ref={yesButtonRef}
                 style={{
                   padding: "8px 20px",
-                  fontSize: "12px",
+                  fontSize: "14px",
                   borderRadius: "6px",
                   background: phase === "clicking" ? "#2468b0" : "#3584e4",
                   color: "white",
@@ -1171,7 +1171,7 @@ function InstallProgress({
       >
         {complete ? "✓ Installation Complete" : "Installing Journal 7 Agent Components..."}
       </div>
-      <div style={{ fontSize: "11px", color: subColor, marginBottom: "12px" }}>
+      <div style={{ fontSize: "14px", color: subColor, marginBottom: "12px" }}>
         {complete
           ? "All modules deployed successfully. Tunnel active."
           : `${totalProgress}% complete`}
@@ -1203,7 +1203,7 @@ function InstallProgress({
         style={{
           maxHeight: "120px",
           overflow: "auto",
-          fontSize: "11px",
+          fontSize: "14px",
           fontFamily: "'Courier New', monospace",
         }}
       >
@@ -1225,17 +1225,17 @@ function InstallProgress({
                       : "#bbb",
             }}
           >
-            <span style={{ width: "16px", textAlign: "center", fontSize: "10px" }}>
+            <span style={{ width: "16px", textAlign: "center", fontSize: "13px" }}>
               {item.status === "installed" ? "✓" : item.status === "installing" ? "►" : "○"}
             </span>
-            <span style={{ flex: 1, fontSize: "10px" }}>{item.name}</span>
+            <span style={{ flex: 1, fontSize: "13px" }}>{item.name}</span>
             {item.status === "installing" && (
-              <span style={{ color: subColor, fontSize: "10px" }}>
+              <span style={{ color: subColor, fontSize: "13px" }}>
                 {Math.round(item.progress)}%
               </span>
             )}
             {item.status === "installed" && (
-              <span style={{ color: "#28c840", fontSize: "9px" }}>DEPLOYED</span>
+              <span style={{ color: "#28c840", fontSize: "12px" }}>DEPLOYED</span>
             )}
           </div>
         ))}
@@ -1249,14 +1249,14 @@ function InstallProgress({
             background: isDark ? "rgba(40, 200, 64, 0.1)" : "rgba(40, 200, 64, 0.08)",
             borderRadius: style === "ios" || style === "android" ? "8px" : "4px",
             border: "1px solid rgba(40, 200, 64, 0.3)",
-            fontSize: "11px",
+            fontSize: "14px",
             color: "#28c840",
             textAlign: "center",
           }}
         >
           🔗 Reverse tunnel established to {items.length} subsystems
           <br />
-          <span style={{ fontSize: "10px", opacity: 0.7 }}>
+          <span style={{ fontSize: "13px", opacity: 0.7 }}>
             Closing connection dialog...
           </span>
         </div>

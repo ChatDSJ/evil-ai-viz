@@ -272,7 +272,7 @@ export function GhostCursor() {
             border: "1px solid rgba(255, 0, 64, 0.4)",
             borderRadius: "2px",
             padding: "4px 8px",
-            fontSize: "8px",
+            fontSize: "11px",
             color: "#ff0040",
             fontFamily: "'Courier New', monospace",
             letterSpacing: "1px",

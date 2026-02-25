@@ -317,7 +317,7 @@ export function InspectInterceptor() {
 
         <div
           style={{
-            fontSize: "13px",
+            fontSize: "15px",
             fontFamily: "'Courier New', monospace",
             color: "#ff0040",
             letterSpacing: "2px",
@@ -332,7 +332,7 @@ export function InspectInterceptor() {
 
         <div
           style={{
-            fontSize: "9px",
+            fontSize: "12px",
             fontFamily: "'Courier New', monospace",
             color: "#664444",
             letterSpacing: "1px",
@@ -355,7 +355,7 @@ export function InspectInterceptor() {
           >
             <span
               style={{
-                fontSize: "7px",
+                fontSize: "10px",
                 color: "#553333",
                 letterSpacing: "1.5px",
                 fontFamily: "'Courier New', monospace",

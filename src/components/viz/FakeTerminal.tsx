@@ -211,7 +211,7 @@ export function FakeTerminal({ visitor }: Props) {
         <span
           style={{
             color: "#00ff41",
-            fontSize: "9px",
+            fontSize: "12px",
             marginLeft: "8px",
             opacity: 0.6,
           }}
@@ -230,7 +230,7 @@ export function FakeTerminal({ visitor }: Props) {
           <div
             key={`${i}-${line.slice(0, 20)}`}
             style={{
-              fontSize: "10px",
+              fontSize: "13px",
               lineHeight: "1.5",
               color: line.startsWith("[CRITICAL]")
                 ? "#ff0040"

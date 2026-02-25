@@ -76,7 +76,7 @@ export function VisitorInfoBar({ visitor }: Props) {
         >
           <div
             style={{
-              fontSize: "7px",
+              fontSize: "10px",
               color: "#666",
               letterSpacing: "1px",
               marginBottom: "1px",
@@ -86,7 +86,7 @@ export function VisitorInfoBar({ visitor }: Props) {
           </div>
           <div
             style={{
-              fontSize: "11px",
+              fontSize: "14px",
               fontWeight: "bold",
               color: item.color,
               fontFamily: "'Courier New', monospace",

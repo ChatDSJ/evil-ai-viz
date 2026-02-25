@@ -157,7 +157,7 @@ export function WeatherWidget({ visitor }: Props) {
         />
         <span
           style={{
-            fontSize: "8px",
+            fontSize: "11px",
             color: "#00d4ff",
             letterSpacing: "2px",
             fontWeight: "bold",
@@ -170,7 +170,7 @@ export function WeatherWidget({ visitor }: Props) {
       {/* Location */}
       <div
         style={{
-          fontSize: "7px",
+          fontSize: "10px",
           color: "#666",
           letterSpacing: "1px",
           marginBottom: "6px",
@@ -201,7 +201,7 @@ export function WeatherWidget({ visitor }: Props) {
           >
             {weather.temp}°F
           </div>
-          <div style={{ fontSize: "8px", color: "#888", marginTop: "2px" }}>
+          <div style={{ fontSize: "11px", color: "#888", marginTop: "2px" }}>
             {weather.description}
           </div>
         </div>
@@ -213,7 +213,7 @@ export function WeatherWidget({ visitor }: Props) {
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
           gap: "4px 12px",
-          fontSize: "8px",
+          fontSize: "11px",
         }}
       >
         <div>
@@ -242,7 +242,7 @@ export function WeatherWidget({ visitor }: Props) {
           marginTop: "8px",
           paddingTop: "5px",
           borderTop: "1px solid rgba(0, 212, 255, 0.1)",
-          fontSize: "7px",
+          fontSize: "10px",
           color: "#444",
           letterSpacing: "0.5px",
         }}

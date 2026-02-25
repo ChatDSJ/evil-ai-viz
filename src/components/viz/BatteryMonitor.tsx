@@ -143,7 +143,7 @@ export function BatteryMonitor() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "9px",
+              fontSize: "12px",
               color: "#ffaa00",
             }}
           >
@@ -154,7 +154,7 @@ export function BatteryMonitor() {
 
       <span
         style={{
-          fontSize: "11px",
+          fontSize: "14px",
           fontWeight: "bold",
           color: barColor,
           textShadow: `0 0 6px ${barColor}40`,
@@ -166,11 +166,11 @@ export function BatteryMonitor() {
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
         {timeLeft && (
-          <span style={{ fontSize: "7px", color: "#888" }}>{timeLeft}</span>
+          <span style={{ fontSize: "10px", color: "#888" }}>{timeLeft}</span>
         )}
         <span
           style={{
-            fontSize: "7px",
+            fontSize: "10px",
             color: "#555",
             maxWidth: "180px",
             overflow: "hidden",

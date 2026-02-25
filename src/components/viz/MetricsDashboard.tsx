@@ -206,7 +206,7 @@ export function MetricsDashboard() {
         >
           <div
             style={{
-              fontSize: "7px",
+              fontSize: "10px",
               color: "#666",
               letterSpacing: "1px",
               marginBottom: "2px",
@@ -239,7 +239,7 @@ export function MetricsDashboard() {
       >
         <div
           style={{
-            fontSize: "7px",
+            fontSize: "10px",
             color: "#888",
             letterSpacing: "1px",
             marginBottom: "1px",
@@ -273,7 +273,7 @@ export function MetricsDashboard() {
       >
         <div
           style={{
-            fontSize: "7px",
+            fontSize: "10px",
             color: "#888",
             letterSpacing: "1px",
             marginBottom: "1px",
@@ -297,7 +297,7 @@ export function MetricsDashboard() {
         {currentBenchmark.humanScore !== null && (
           <div
             style={{
-              fontSize: "7px",
+              fontSize: "10px",
               color: "#555",
               letterSpacing: "0.5px",
               marginTop: "1px",
@@ -315,7 +315,7 @@ export function MetricsDashboard() {
         {currentBenchmark.humanScore === null && currentBenchmark.unit === "% OF ALL CODE" && (
           <div
             style={{
-              fontSize: "7px",
+              fontSize: "10px",
               color: "#555",
               letterSpacing: "0.5px",
               marginTop: "1px",

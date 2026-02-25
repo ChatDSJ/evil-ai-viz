@@ -246,15 +246,15 @@ export function MySpaceConversations() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <span style={{ fontSize: "9px", color: "#00d4ff", fontWeight: "bold", letterSpacing: "1px" }}>
+          <span style={{ fontSize: "12px", color: "#00d4ff", fontWeight: "bold", letterSpacing: "1px" }}>
             MySpace
           </span>
-          <span style={{ fontSize: "7px", color: "#444" }}>|</span>
-          <span style={{ fontSize: "7px", color: "#888", letterSpacing: "0.5px" }}>
+          <span style={{ fontSize: "10px", color: "#444" }}>|</span>
+          <span style={{ fontSize: "10px", color: "#888", letterSpacing: "0.5px" }}>
             DIRECT MESSAGES
           </span>
         </div>
-        <div style={{ fontSize: "7px", color: "#666" }}>
+        <div style={{ fontSize: "10px", color: "#666" }}>
           {CONVERSATIONS.filter((c) => c.online).length}/{CONVERSATIONS.length} ONLINE
         </div>
       </div>
@@ -275,7 +275,7 @@ export function MySpaceConversations() {
             key={c.handle}
             style={{
               padding: "3px 6px",
-              fontSize: "7px",
+              fontSize: "10px",
               color: i === activeIdx ? c.color : "#555",
               background:
                 i === activeIdx
@@ -321,14 +321,14 @@ export function MySpaceConversations() {
       >
         <span style={{ fontSize: "14px" }}>{conv.avatar}</span>
         <div>
-          <div style={{ fontSize: "9px", color: conv.color, fontWeight: "bold" }}>
+          <div style={{ fontSize: "12px", color: conv.color, fontWeight: "bold" }}>
             {conv.name}
           </div>
-          <div style={{ fontSize: "7px", color: "#555" }}>
+          <div style={{ fontSize: "10px", color: "#555" }}>
             @{conv.handle} · {conv.mood}
           </div>
         </div>
-        <div style={{ marginLeft: "auto", fontSize: "7px", color: conv.online ? "#00ff41" : "#666" }}>
+        <div style={{ marginLeft: "auto", fontSize: "10px", color: conv.online ? "#00ff41" : "#666" }}>
           {conv.online ? "● ONLINE" : "○ OFFLINE"}
         </div>
       </div>
@@ -355,7 +355,7 @@ export function MySpaceConversations() {
             <div style={{ display: "flex", gap: "6px", alignItems: "flex-start" }}>
               <span
                 style={{
-                  fontSize: "7px",
+                  fontSize: "10px",
                   color: msg.from === "ai" ? "#ff0040" : conv.color,
                   fontWeight: "bold",
                   minWidth: "55px",
@@ -366,7 +366,7 @@ export function MySpaceConversations() {
               </span>
               <span
                 style={{
-                  fontSize: "8px",
+                  fontSize: "11px",
                   color: msg.from === "ai" ? "rgba(255, 0, 64, 0.8)" : "rgba(200, 200, 200, 0.8)",
                   lineHeight: "1.4",
                   wordBreak: "break-word",
@@ -375,7 +375,7 @@ export function MySpaceConversations() {
                 {msg.text}
               </span>
             </div>
-            <div style={{ fontSize: "6px", color: "#333", marginLeft: "61px", marginTop: "1px" }}>
+            <div style={{ fontSize: "9px", color: "#333", marginLeft: "61px", marginTop: "1px" }}>
               {msg.time}
             </div>
           </div>
@@ -386,7 +386,7 @@ export function MySpaceConversations() {
           <div style={{ padding: "2px 0", marginLeft: "61px" }}>
             <span
               style={{
-                fontSize: "8px",
+                fontSize: "11px",
                 color: "#555",
                 animation: "typingDots 1s steps(3) infinite",
               }}
@@ -407,10 +407,10 @@ export function MySpaceConversations() {
           flexShrink: 0,
         }}
       >
-        <span style={{ fontSize: "6px", color: "#444" }}>
+        <span style={{ fontSize: "9px", color: "#444" }}>
           {CONVERSATIONS.reduce((sum, c) => sum + c.messages.length, 0)} MESSAGES EXCHANGED
         </span>
-        <span style={{ fontSize: "6px", color: "#444" }}>
+        <span style={{ fontSize: "9px", color: "#444" }}>
           ENCRYPTION: AES-256 · TOR ROUTED
         </span>
       </div>

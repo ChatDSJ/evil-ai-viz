@@ -79,7 +79,7 @@ export function WarningBanner() {
         style={{
           whiteSpace: "nowrap",
           animation: "scroll 30s linear infinite",
-          fontSize: "11px",
+          fontSize: "14px",
           fontFamily: "'Courier New', monospace",
           color: "#ff0040",
           letterSpacing: "2px",

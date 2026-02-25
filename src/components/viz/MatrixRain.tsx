@@ -18,10 +18,17 @@ export function MatrixRain() {
     window.addEventListener("resize", resize);
 
     const fontSize = 14;
-    const columns = Math.floor(canvas.width / fontSize);
+    // Less rain: only use every 3rd column (was every column)
+    const totalColumns = Math.floor(canvas.width / fontSize);
+    const columns = Math.floor(totalColumns / 3);
     const drops: number[] = Array(columns)
       .fill(0)
       .map(() => Math.random() * -100);
+    // Map sparse columns to spread across full width
+    const columnPositions = Array(columns).fill(0).map((_, i) => {
+      const basePos = Math.floor(i * 3 + Math.random() * 3);
+      return Math.min(basePos, totalColumns - 1);
+    });
 
     const chars =
       "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF{}[]<>/\\|";
@@ -33,7 +40,7 @@ export function MatrixRain() {
 
       for (let i = 0; i < drops.length; i++) {
         const char = chars[Math.floor(Math.random() * chars.length)];
-        const x = i * fontSize;
+        const x = columnPositions[i] * fontSize;
         const y = drops[i] * fontSize;
 
         // Varying green shades
@@ -55,7 +62,8 @@ export function MatrixRain() {
         if (y > canvas.height && Math.random() > 0.975) {
           drops[i] = 0;
         }
-        drops[i] += 0.5 + Math.random() * 0.5;
+        // Slower rain: ~4x slower than original (was 0.5 + random*0.5)
+        drops[i] += 0.12 + Math.random() * 0.13;
       }
 
       animId = requestAnimationFrame(draw);

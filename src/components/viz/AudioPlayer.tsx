@@ -113,7 +113,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 const CROSSFADE_DURATION = 3_000; // 3 seconds crossfade between tracks
-const FADE_IN_DURATION = 60_000; // 60 seconds initial fade-in
+const FADE_IN_DURATION = 240_000; // 4 minutes initial fade-in (was 60s, now 4x slower per David's notes)
 const FADE_STEP_MS = 200; // update volume every 200ms
 
 export function AudioPlayer() {
@@ -349,7 +349,7 @@ export function AudioPlayer() {
         <span
           style={{
             color: "#00d4ff",
-            fontSize: "10px",
+            fontSize: "13px",
             fontFamily: "'Courier New', monospace",
             letterSpacing: "0.5px",
             maxWidth: "180px",
@@ -374,7 +374,7 @@ export function AudioPlayer() {
             padding: "2px 4px",
             cursor: "pointer",
             color: "#00d4ff",
-            fontSize: "10px",
+            fontSize: "13px",
             opacity: 0.6,
           }}
         >
@@ -402,7 +402,7 @@ export function AudioPlayer() {
               style={{
                 padding: "6px 12px",
                 cursor: "pointer",
-                fontSize: "9px",
+                fontSize: "12px",
                 fontFamily: "'Courier New', monospace",
                 color: i === playlistIndex ? "#00d4ff" : "#666",
                 background:
@@ -433,7 +433,7 @@ export function AudioPlayer() {
           <div
             style={{
               padding: "4px 12px",
-              fontSize: "7px",
+              fontSize: "10px",
               color: "#444",
               borderTop: "1px solid rgba(0, 212, 255, 0.1)",
               marginTop: "4px",

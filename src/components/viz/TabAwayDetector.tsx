@@ -115,7 +115,7 @@ export function TabAwayDetector() {
 
         <div
           style={{
-            fontSize: "11px",
+            fontSize: "14px",
             fontFamily: "'Courier New', monospace",
             color: "#ff0040",
             letterSpacing: "1.5px",
@@ -130,7 +130,7 @@ export function TabAwayDetector() {
           <div
             style={{
               marginTop: "10px",
-              fontSize: "8px",
+              fontSize: "11px",
               color: "#444",
               letterSpacing: "1px",
             }}

@@ -600,7 +600,7 @@ export function UnifiedFeed({ visitor }: Props) {
           <div
             key={entry.id}
             style={{
-              fontSize: "9px",
+              fontSize: "12px",
               lineHeight: "1.6",
               color: entry.color,
               opacity: Math.max(0.25, (i / entries.length) * 0.75 + 0.25),
@@ -612,7 +612,7 @@ export function UnifiedFeed({ visitor }: Props) {
             }}
           >
             {entry.prefix && (
-              <span style={{ color: entry.prefixColor || "#666", marginRight: "6px", fontSize: "7px" }}>
+              <span style={{ color: entry.prefixColor || "#666", marginRight: "6px", fontSize: "10px" }}>
                 [{entry.prefix}]
               </span>
             )}
@@ -620,7 +620,7 @@ export function UnifiedFeed({ visitor }: Props) {
           </div>
         ))}
         {/* Cursor at bottom */}
-        <div style={{ fontSize: "9px", color: "#00ff41", opacity: 0.8 }}>
+        <div style={{ fontSize: "12px", color: "#00ff41", opacity: 0.8 }}>
           <span style={{ animation: "blink-feed 1s steps(1) infinite" }}>█</span>
         </div>
       </div>

@@ -411,7 +411,7 @@ export function DeviceFingerprint() {
           />
           <span
             style={{
-              fontSize: "7px",
+              fontSize: "10px",
               color: "#ff0040",
               letterSpacing: "2px",
               fontWeight: "bold",
@@ -424,7 +424,7 @@ export function DeviceFingerprint() {
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
           <span
             style={{
-              fontSize: "6px",
+              fontSize: "9px",
               color: classColors[classificationLevel],
               letterSpacing: "1px",
               padding: "1px 4px",
@@ -434,7 +434,7 @@ export function DeviceFingerprint() {
           >
             {classLabels[classificationLevel]}
           </span>
-          <span style={{ fontSize: "8px", color: "#444" }}>
+          <span style={{ fontSize: "11px", color: "#444" }}>
             {expanded ? "▼" : "▶"}
           </span>
         </div>
@@ -454,11 +454,11 @@ export function DeviceFingerprint() {
               >
                 <div style={{ display: "flex", gap: "4px", alignItems: "baseline" }}>
                   {line.icon && (
-                    <span style={{ fontSize: "8px" }}>{line.icon}</span>
+                    <span style={{ fontSize: "11px" }}>{line.icon}</span>
                   )}
                   <span
                     style={{
-                      fontSize: "6px",
+                      fontSize: "9px",
                       color: "#555",
                       letterSpacing: "1.5px",
                       minWidth: "65px",
@@ -469,7 +469,7 @@ export function DeviceFingerprint() {
                   </span>
                   <span
                     style={{
-                      fontSize: "8px",
+                      fontSize: "11px",
                       color: line.color,
                       letterSpacing: "0.3px",
                       wordBreak: "break-all",
@@ -486,11 +486,11 @@ export function DeviceFingerprint() {
               <div style={{ marginBottom: "3px" }}>
                 <div style={{ display: "flex", gap: "4px", alignItems: "baseline" }}>
                   {lines[revealedCount].icon && (
-                    <span style={{ fontSize: "8px" }}>{lines[revealedCount].icon}</span>
+                    <span style={{ fontSize: "11px" }}>{lines[revealedCount].icon}</span>
                   )}
                   <span
                     style={{
-                      fontSize: "6px",
+                      fontSize: "9px",
                       color: "#555",
                       letterSpacing: "1.5px",
                       minWidth: "65px",
@@ -501,7 +501,7 @@ export function DeviceFingerprint() {
                   </span>
                   <span
                     style={{
-                      fontSize: "8px",
+                      fontSize: "11px",
                       color: lines[revealedCount].color,
                       letterSpacing: "0.3px",
                     }}
@@ -540,10 +540,10 @@ export function DeviceFingerprint() {
                 marginBottom: "3px",
               }}
             >
-              <span style={{ fontSize: "6px", color: "#444", letterSpacing: "1px" }}>
+              <span style={{ fontSize: "9px", color: "#444", letterSpacing: "1px" }}>
                 PROFILING: {Math.min(Math.round((revealedCount / lines.length) * 100), 100)}%
               </span>
-              <span style={{ fontSize: "6px", color: "#333", letterSpacing: "1px" }}>
+              <span style={{ fontSize: "9px", color: "#333", letterSpacing: "1px" }}>
                 {revealedCount}/{lines.length} VECTORS
               </span>
             </div>
@@ -583,7 +583,7 @@ export function DeviceFingerprint() {
             >
               <div
                 style={{
-                  fontSize: "7px",
+                  fontSize: "10px",
                   color: "#ff0040",
                   letterSpacing: "2px",
                   fontWeight: "bold",
@@ -593,7 +593,7 @@ export function DeviceFingerprint() {
               </div>
               <div
                 style={{
-                  fontSize: "6px",
+                  fontSize: "9px",
                   color: "#553333",
                   letterSpacing: "1px",
                   marginTop: "2px",

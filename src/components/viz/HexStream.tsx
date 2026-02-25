@@ -46,7 +46,7 @@ export function HexStream() {
     >
       <div
         style={{
-          fontSize: "7px",
+          fontSize: "10px",
           color: "#00ff41",
           opacity: 0.5,
           marginBottom: "4px",
@@ -58,7 +58,7 @@ export function HexStream() {
         <div
           key={`${i}-${line}`}
           style={{
-            fontSize: "8px",
+            fontSize: "11px",
             lineHeight: "1.4",
             color: "#00ff41",
             opacity: 0.3 + (i / hexLines.length) * 0.7,

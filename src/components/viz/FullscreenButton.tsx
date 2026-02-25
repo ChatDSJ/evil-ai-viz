@@ -100,7 +100,7 @@ export function FullscreenButton() {
       <span
         style={{
           color: "#00ff41",
-          fontSize: "10px",
+          fontSize: "13px",
           fontFamily: "'Courier New', monospace",
           letterSpacing: "1px",
           textTransform: "uppercase",

@@ -246,7 +246,7 @@ export function NewsWidget({ visitor }: Props) {
           />
           <span
             style={{
-              fontSize: "7px",
+              fontSize: "10px",
               color: "#ff0040",
               letterSpacing: "2px",
               fontWeight: "bold",
@@ -257,7 +257,7 @@ export function NewsWidget({ visitor }: Props) {
         </div>
         <span
           style={{
-            fontSize: "7px",
+            fontSize: "10px",
             color: "#444",
             letterSpacing: "1px",
           }}
@@ -280,7 +280,7 @@ export function NewsWidget({ visitor }: Props) {
         {/* Category tag */}
         <span
           style={{
-            fontSize: "6px",
+            fontSize: "9px",
             color: categoryColor(current.category),
             letterSpacing: "1.5px",
             fontWeight: "bold",
@@ -297,7 +297,7 @@ export function NewsWidget({ visitor }: Props) {
         {/* Headline text */}
         <div
           style={{
-            fontSize: "9px",
+            fontSize: "12px",
             color: "#ddd",
             lineHeight: "1.3",
             letterSpacing: "0.3px",
@@ -309,7 +309,7 @@ export function NewsWidget({ visitor }: Props) {
         {/* Source */}
         <div
           style={{
-            fontSize: "7px",
+            fontSize: "10px",
             color: "#555",
             marginTop: "2px",
           }}
@@ -329,7 +329,7 @@ export function NewsWidget({ visitor }: Props) {
           <div
             key={`${item.headline}-${i}`}
             style={{
-              fontSize: "7px",
+              fontSize: "10px",
               color: "#555",
               lineHeight: "1.2",
               marginBottom: "3px",
@@ -341,7 +341,7 @@ export function NewsWidget({ visitor }: Props) {
               maxWidth: "100%",
             }}
           >
-            <span style={{ color: categoryColor(item.category), fontSize: "6px" }}>
+            <span style={{ color: categoryColor(item.category), fontSize: "9px" }}>
               {item.category}
             </span>{" "}
             {item.headline.slice(0, 50)}
@@ -356,7 +356,7 @@ export function NewsWidget({ visitor }: Props) {
           marginTop: "4px",
           paddingTop: "3px",
           borderTop: "1px solid rgba(0, 212, 255, 0.08)",
-          fontSize: "6px",
+          fontSize: "9px",
           color: "#333",
           letterSpacing: "1px",
           display: "flex",

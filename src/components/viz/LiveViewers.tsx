@@ -232,7 +232,7 @@ export function LiveViewers({ visitor }: Props) {
           />
           <span
             style={{
-              fontSize: "8px",
+              fontSize: "11px",
               color: "#ff00ff",
               letterSpacing: "2px",
               fontWeight: "bold",
@@ -273,7 +273,7 @@ export function LiveViewers({ visitor }: Props) {
       {/* Status line */}
       <div
         style={{
-          fontSize: "7px",
+          fontSize: "10px",
           color: "#666",
           letterSpacing: "0.5px",
           lineHeight: "1.4",

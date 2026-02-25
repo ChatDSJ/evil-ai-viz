@@ -197,7 +197,7 @@ export function SlowCreep() {
           />
           <span
             style={{
-              fontSize: "5px",
+              fontSize: "8px",
               color: "#330000",
               letterSpacing: "1px",
               fontFamily: "'Courier New', monospace",

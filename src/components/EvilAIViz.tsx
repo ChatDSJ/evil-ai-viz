@@ -21,9 +21,12 @@ import { GhostCursor } from "./viz/GhostCursor";
 import { InspectInterceptor } from "./viz/InspectInterceptor";
 import { DeviceFingerprint } from "./viz/DeviceFingerprint";
 import { SlowCreep } from "./viz/SlowCreep";
+import { FakeNotifications } from "./viz/FakeNotifications";
+import { BehaviorAnalysis } from "./viz/BehaviorAnalysis";
+import { TabCloseInterceptor } from "./viz/TabCloseInterceptor";
 
 import { UnifiedFeed } from "./viz/UnifiedFeed";
-import { ChessCCCEmbed } from "./viz/ChessCCCEmbed";
+// ChessCCCEmbed now rendered inside SelfPlayGames rotation
 import { SelfPlayGames } from "./viz/SelfPlayGames";
 import { MySpaceConversations } from "./viz/MySpaceConversations";
 
@@ -144,6 +147,8 @@ export function EvilAIViz() {
       inspectInterceptor: phase >= 2,
       slowCreep: phase >= 1,
       deviceFingerprint: phase >= 6,
+      fakeNotifications: phase >= 7,
+      behaviorAnalysis: phase >= 5,
     }),
     [phase],
   );
@@ -240,21 +245,7 @@ export function EvilAIViz() {
         </Reveal>
       )}
 
-      <Reveal show={phases.chessCCC} duration={2500} delay={500}>
-        <div
-          style={{
-            position: "absolute",
-            top: "32%",
-            right: "2%",
-            width: "340px",
-            height: "280px",
-            opacity: 0.9,
-            zIndex: 40,
-          }}
-        >
-          <ChessCCCEmbed />
-        </div>
-      </Reveal>
+      {/* Chess CCC is now in the SelfPlayGames rotation cycle */}
 
       {/* ─── PHASE 5.5: Self-play games (arcade + board + text adventures) ─── */}
       <Reveal show={phases.selfPlayGames} duration={3000} delay={1000}>
@@ -313,6 +304,27 @@ export function EvilAIViz() {
         </div>
       </Reveal>
 
+      {/* ─── PHASE 5: Behavioral Analysis Panel (mouse profiling) ─── */}
+      <Reveal show={phases.behaviorAnalysis} duration={2500} delay={2000}>
+        <div
+          style={{
+            position: "absolute",
+            bottom: "4%",
+            left: "2%",
+            width: "290px",
+            opacity: 0.95,
+            zIndex: 38,
+          }}
+        >
+          <BehaviorAnalysis />
+        </div>
+      </Reveal>
+
+      {/* ─── PHASE 7: Fake OS Notifications ─── */}
+      {phases.fakeNotifications && visitor.loaded && (
+        <FakeNotifications visitor={visitor} delay={5000} />
+      )}
+
       {/* ─── PHASE 7: Code fragments + warning banner ─── */}
       <Reveal show={phases.codeFragments} duration={2000}>
         <CodeFragments />
@@ -348,6 +360,9 @@ export function EvilAIViz() {
 
       {/* ─── PHASE 2: Inspect interceptor (right-click, DevTools, copy, print) ─── */}
       {phases.inspectInterceptor && <InspectInterceptor />}
+
+      {/* ─── Tab/window close interceptor ─── */}
+      {phases.finalExtras && <TabCloseInterceptor />}
 
       {/* Global animation keyframes */}
       <style>{`

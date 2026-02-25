@@ -282,7 +282,7 @@ export function LiveViewers({ visitor }: Props) {
             overflow: "hidden",
           }}
         >
-          {activeVisitors.slice(0, 3).map((v, i) => (
+          {activeVisitors.slice(0, 3).map((v) => (
             <div key={v.sessionId} style={{ color: v.sessionId === sessionId ? "#ff0040" : "#ff00ff" }}>
               {v.city}{v.region ? `, ${v.region}` : ""} — {v.country}
             </div>

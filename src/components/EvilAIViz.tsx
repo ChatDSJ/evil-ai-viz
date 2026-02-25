@@ -3,14 +3,12 @@ import { useVisitorInfo } from "../hooks/useVisitorInfo";
 import { BootSequence } from "./viz/BootSequence";
 import { MatrixRain } from "./viz/MatrixRain";
 import { WorldMap } from "./viz/WorldMap";
-// NeuralNetwork replaced by MySpaceConversations
 import { CodeFragments } from "./viz/CodeFragments";
 import { WireframeGlobe } from "./viz/WireframeGlobe";
 import { GlitchOverlay } from "./viz/GlitchOverlay";
 import { DataFlowLines } from "./viz/DataFlowLines";
 import { ScanLines } from "./viz/ScanLines";
 import { WarningBanner } from "./viz/WarningBanner";
-import { FullscreenButton } from "./viz/FullscreenButton";
 import { AudioPlayer } from "./viz/AudioPlayer";
 import { UserLocationMap } from "./viz/UserLocationMap";
 import { FakeOSDialog } from "./viz/FakeOSDialog";
@@ -24,31 +22,31 @@ import { SlowCreep } from "./viz/SlowCreep";
 import { FakeNotifications } from "./viz/FakeNotifications";
 import { BehaviorAnalysis } from "./viz/BehaviorAnalysis";
 import { TabCloseInterceptor } from "./viz/TabCloseInterceptor";
+import { Draggable } from "./viz/Draggable";
 
 import { UnifiedFeed } from "./viz/UnifiedFeed";
-// ChessCCCEmbed now rendered inside SelfPlayGames rotation
 import { SelfPlayGames } from "./viz/SelfPlayGames";
 import { MySpaceConversations } from "./viz/MySpaceConversations";
 
 /**
- * Progressive reveal phases (each ~5s apart after boot completes):
+ * Progressive reveal phases — each 20 seconds apart after boot completes.
+ * Gives viewers time to take in and enjoy each new element.
  *
  * Phase 0: Boot sequence only (AI HEADQUARTERS prompt)
  * Phase 1: Matrix rain + scan lines fade in (the world awakens)
  * Phase 2: Unified feed starts trickling (left column)
  * Phase 3: World map + data flow lines appear
  * Phase 4: Wireframe globe + radar sweep
- * Phase 5: Visitor info bar + Chess CCC embed
- * Phase 6: User location map + neural network
+ * Phase 5: Visitor info bar + self-play games
+ * Phase 6: User location map + MySpace conversations
  * Phase 7: Code fragments + warning banner
- * Phase 8: All remaining (glitch, dialog, controls)
+ * Phase 8: All remaining (glitch, dialog, etc.)
  */
+
+const PHASE_INTERVAL_MS = 20_000; // 20 seconds between each phase reveal
 
 /**
  * Wrapper that delays rendering + fades children in.
- * Uses `position: absolute; inset: 0` by default so it doesn't
- * break the absolute-positioned children (canvases, overlays).
- * Pass `inline` to use inline layout instead.
  */
 function Reveal({
   show,
@@ -86,7 +84,6 @@ function Reveal({
     );
   }
 
-  // Full-overlay wrapper — preserves absolute positioning of children
   return (
     <div
       style={{
@@ -111,14 +108,14 @@ export function EvilAIViz() {
     setPhase(1);
   }, []);
 
-  // Progressive reveal: advance phase every 5 seconds after boot
+  // Progressive reveal: advance phase every 20 seconds after boot
   useEffect(() => {
     if (!bootDone) return;
 
     const timers: ReturnType<typeof setTimeout>[] = [];
     for (let p = 2; p <= 8; p++) {
       timers.push(
-        setTimeout(() => setPhase(p), (p - 1) * 5000),
+        setTimeout(() => setPhase(p), (p - 1) * PHASE_INTERVAL_MS),
       );
     }
 
@@ -136,7 +133,6 @@ export function EvilAIViz() {
       globe: phase >= 4,
       radar: phase >= 4,
       visitorInfo: phase >= 5,
-      chessCCC: phase >= 5,
       selfPlayGames: phase >= 5,
       locationMap: phase >= 6,
       neuralNet: phase >= 6,
@@ -164,10 +160,13 @@ export function EvilAIViz() {
         cursor: "none",
       }}
     >
+      {/* ─── Invisible audio player — auto-plays with progressive volume ─── */}
+      <AudioPlayer />
+
       {/* ─── PHASE 0: Boot sequence (AI HEADQUARTERS prompt) ─── */}
       <BootSequence onBootComplete={onBootComplete} />
 
-      {/* ─── PHASE 1: Slow Creep (imperceptible red shift - starts early, runs forever) ─── */}
+      {/* ─── PHASE 1: Slow Creep (imperceptible red shift) ─── */}
       {phases.slowCreep && <SlowCreep />}
 
       {/* ─── PHASE 1: Matrix rain + scan lines ─── */}
@@ -181,19 +180,20 @@ export function EvilAIViz() {
 
       {/* ─── PHASE 3: World map + data flow ─── */}
       <Reveal show={phases.worldMap} duration={3000}>
-        <div
+        <Draggable
           style={{
             position: "absolute",
             top: "50%",
             left: "50%",
-            transform: "translate(-50%, -50%)",
             width: "60vw",
             height: "60vh",
             opacity: 0.4,
+            pointerEvents: "auto",
           }}
+          baseTransform="translate(-50%, -50%)"
         >
           <WorldMap />
-        </div>
+        </Draggable>
       </Reveal>
 
       <Reveal show={phases.dataFlow} duration={2000} delay={1000}>
@@ -209,7 +209,7 @@ export function EvilAIViz() {
 
       {/* ─── PHASE 4: Globe + radar ─── */}
       <Reveal show={phases.globe} duration={2500}>
-        <div
+        <Draggable
           style={{
             position: "absolute",
             top: "3%",
@@ -217,14 +217,15 @@ export function EvilAIViz() {
             width: "240px",
             height: "240px",
             opacity: 0.7,
+            pointerEvents: "auto",
           }}
         >
           <WireframeGlobe />
-        </div>
+        </Draggable>
       </Reveal>
 
       <Reveal show={phases.radar} duration={2000} delay={500}>
-        <div
+        <Draggable
           style={{
             position: "absolute",
             top: "40%",
@@ -232,30 +233,29 @@ export function EvilAIViz() {
             width: "200px",
             height: "200px",
             opacity: 0.5,
+            pointerEvents: "auto",
           }}
         >
           <RadarSweep />
-        </div>
+        </Draggable>
       </Reveal>
 
-      {/* ─── PHASE 5: Visitor info + Chess CCC ─── */}
+      {/* ─── PHASE 5: Visitor info ─── */}
       {phases.visitorInfo && visitor.loaded && (
         <Reveal show={true} duration={2000}>
           <VisitorInfoBar visitor={visitor} />
         </Reveal>
       )}
 
-      {/* Chess CCC is now in the SelfPlayGames rotation cycle */}
-
-      {/* ─── PHASE 5.5: Self-play games (arcade + board + text adventures) ─── */}
+      {/* ─── PHASE 5: Self-play games (arcade + board + text adventures) ─── */}
       <Reveal show={phases.selfPlayGames} duration={3000} delay={1000}>
         <SelfPlayGames />
       </Reveal>
 
-      {/* ─── PHASE 6: User location + neural network ─── */}
+      {/* ─── PHASE 6: User location map ─── */}
       {phases.locationMap && visitor.loaded && (
         <Reveal show={true} duration={2500}>
-          <div
+          <Draggable
             style={{
               position: "absolute",
               bottom: "38%",
@@ -264,16 +264,17 @@ export function EvilAIViz() {
               height: "300px",
               opacity: 0.9,
               zIndex: 35,
+              pointerEvents: "auto",
             }}
           >
             <UserLocationMap visitor={visitor} />
-          </div>
+          </Draggable>
         </Reveal>
       )}
 
-      {/* ─── MySpace Conversations (replaces standalone neural net) ─── */}
+      {/* ─── MySpace Conversations ─── */}
       <Reveal show={phases.neuralNet} duration={2000} delay={800}>
-        <div
+        <Draggable
           style={{
             position: "absolute",
             top: "3%",
@@ -282,15 +283,16 @@ export function EvilAIViz() {
             height: "340px",
             opacity: 0.9,
             zIndex: 35,
+            pointerEvents: "auto",
           }}
         >
           <MySpaceConversations />
-        </div>
+        </Draggable>
       </Reveal>
 
       {/* ─── PHASE 6: Device Fingerprint Dossier ─── */}
       <Reveal show={phases.deviceFingerprint} duration={2500} delay={1500}>
-        <div
+        <Draggable
           style={{
             position: "absolute",
             bottom: "4%",
@@ -298,15 +300,16 @@ export function EvilAIViz() {
             width: "340px",
             opacity: 0.95,
             zIndex: 38,
+            pointerEvents: "auto",
           }}
         >
           <DeviceFingerprint />
-        </div>
+        </Draggable>
       </Reveal>
 
-      {/* ─── PHASE 5: Behavioral Analysis Panel (mouse profiling) ─── */}
+      {/* ─── PHASE 5: Behavioral Analysis Panel ─── */}
       <Reveal show={phases.behaviorAnalysis} duration={2500} delay={2000}>
-        <div
+        <Draggable
           style={{
             position: "absolute",
             bottom: "4%",
@@ -314,10 +317,11 @@ export function EvilAIViz() {
             width: "290px",
             opacity: 0.95,
             zIndex: 38,
+            pointerEvents: "auto",
           }}
         >
           <BehaviorAnalysis />
-        </div>
+        </Draggable>
       </Reveal>
 
       {/* ─── PHASE 7: Fake OS Notifications ─── */}
@@ -347,18 +351,10 @@ export function EvilAIViz() {
         <FakeOSDialog visitor={visitor} delay={15000} />
       )}
 
-      <Reveal show={phases.finalExtras} duration={1500} delay={500}>
-        <FullscreenButton />
-      </Reveal>
-
-      <Reveal show={phases.finalExtras} duration={1500} delay={500}>
-        <AudioPlayer />
-      </Reveal>
-
-      {/* ─── PHASE 1: Ghost cursor (follows with 1.5s delay) ─── */}
+      {/* ─── PHASE 1: Ghost cursor ─── */}
       {phases.ghostCursor && <GhostCursor />}
 
-      {/* ─── PHASE 2: Inspect interceptor (right-click, DevTools, copy, print) ─── */}
+      {/* ─── PHASE 2: Inspect interceptor ─── */}
       {phases.inspectInterceptor && <InspectInterceptor />}
 
       {/* ─── Tab/window close interceptor ─── */}

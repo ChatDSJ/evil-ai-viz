@@ -113,19 +113,21 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 const CROSSFADE_DURATION = 3_000; // 3 seconds crossfade between tracks
-const FADE_IN_DURATION = 240_000; // 4 minutes initial fade-in (was 60s, now 4x slower per David's notes)
+const FADE_IN_DURATION = 240_000; // 4 minutes initial fade-in
 const FADE_STEP_MS = 200; // update volume every 200ms
 
+/**
+ * Invisible audio player - no UI at all.
+ * Auto-starts on first user interaction, fades in from silence over 4 minutes.
+ * Auto-advances through shuffled playlist with crossfade.
+ */
 export function AudioPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const fadeRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fadeStartRef = useRef<number>(0);
-  const [playing, setPlaying] = useState(false);
+  const [, setPlaying] = useState(false);
   const [playlistIndex, setPlaylistIndex] = useState(0);
-  const [expanded, setExpanded] = useState(false);
-  const [visible, setVisible] = useState(true);
   const isFirstTrackRef = useRef(true);
-
   const autoStartedRef = useRef(false);
 
   // Shuffle playlist on mount so every session is different
@@ -184,7 +186,7 @@ export function AudioPlayer() {
           startFadeIn();
         })
         .catch(() => {
-          // Browser still blocked it — user can click the play button manually
+          // Browser still blocked it — retry on next interaction
           autoStartedRef.current = false;
         });
 
@@ -219,66 +221,6 @@ export function AudioPlayer() {
     };
   }, [startFadeIn]);
 
-  // Auto-hide
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
-    const show = () => {
-      setVisible(true);
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        if (!expanded) setVisible(false);
-      }, 5000);
-    };
-    show();
-    window.addEventListener("mousemove", show);
-    return () => {
-      window.removeEventListener("mousemove", show);
-      clearTimeout(timer);
-    };
-  }, [expanded]);
-
-  const togglePlay = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (playing) {
-      audio.pause();
-      // Stop fade on pause
-      if (fadeRef.current) {
-        clearInterval(fadeRef.current);
-        fadeRef.current = null;
-      }
-      setPlaying(false);
-    } else {
-      audio.volume = 0;
-      audio
-        .play()
-        .then(() => {
-          setPlaying(true);
-          startFadeIn();
-        })
-        .catch(() => {});
-    }
-  }, [playing, startFadeIn]);
-
-  const switchTrack = useCallback(
-    (index: number) => {
-      const audio = audioRef.current;
-      if (!audio) return;
-
-      setPlaylistIndex(index);
-      audio.src = playlist[index].src;
-      if (playing) {
-        audio.volume = 0;
-        audio
-          .play()
-          .then(() => startFadeIn(CROSSFADE_DURATION))
-          .catch(() => {});
-      }
-    },
-    [playing, startFadeIn, playlist],
-  );
-
   // Auto-advance to next track when current one ends
   useEffect(() => {
     const audio = audioRef.current;
@@ -300,149 +242,6 @@ export function AudioPlayer() {
 
   const track = playlist[playlistIndex];
 
-  return (
-    <div
-      style={{
-        position: "absolute",
-        bottom: "36px",
-        left: "12px",
-        zIndex: 200,
-        opacity: visible || expanded ? 0.9 : 0,
-        transition: "opacity 0.5s ease",
-      }}
-    >
-      <audio ref={audioRef} src={track.src} preload="auto" />
-
-      {/* Main button */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          background: "rgba(0, 0, 0, 0.8)",
-          border: "1px solid rgba(0, 212, 255, 0.4)",
-          borderRadius: expanded ? "4px 4px 0 0" : "4px",
-          padding: "8px 12px",
-          cursor: "pointer",
-          boxShadow: "0 0 10px rgba(0, 212, 255, 0.15)",
-        }}
-        onClick={togglePlay}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = "rgba(0, 212, 255, 0.8)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = "rgba(0, 212, 255, 0.4)";
-        }}
-      >
-        {/* Play/Pause icon */}
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          {playing ? (
-            <>
-              <rect x="2" y="1" width="3.5" height="12" fill="#00d4ff" />
-              <rect x="8.5" y="1" width="3.5" height="12" fill="#00d4ff" />
-            </>
-          ) : (
-            <polygon points="2,1 12,7 2,13" fill="#00d4ff" />
-          )}
-        </svg>
-
-        <span
-          style={{
-            color: "#00d4ff",
-            fontSize: "13px",
-            fontFamily: "'Courier New', monospace",
-            letterSpacing: "0.5px",
-            maxWidth: "180px",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {playing
-            ? `♫ ${track.title} [${playlistIndex + 1}/${playlist.length}]`
-            : "▸ PLAY AUDIO"}
-        </span>
-
-        {/* Expand/collapse for track list */}
-        <div
-          onClick={(e) => {
-            e.stopPropagation();
-            setExpanded(!expanded);
-          }}
-          style={{
-            marginLeft: "4px",
-            padding: "2px 4px",
-            cursor: "pointer",
-            color: "#00d4ff",
-            fontSize: "13px",
-            opacity: 0.6,
-          }}
-        >
-          {expanded ? "▼" : "▲"}
-        </div>
-      </div>
-
-      {/* Track list */}
-      {expanded && (
-        <div
-          style={{
-            background: "rgba(0, 0, 0, 0.9)",
-            border: "1px solid rgba(0, 212, 255, 0.4)",
-            borderTop: "none",
-            borderRadius: "0 0 4px 4px",
-            padding: "4px 0",
-            maxHeight: "300px",
-            overflowY: "auto",
-          }}
-        >
-          {playlist.map((t, i) => (
-            <div
-              key={t.id}
-              onClick={() => switchTrack(i)}
-              style={{
-                padding: "6px 12px",
-                cursor: "pointer",
-                fontSize: "12px",
-                fontFamily: "'Courier New', monospace",
-                color: i === playlistIndex ? "#00d4ff" : "#666",
-                background:
-                  i === playlistIndex
-                    ? "rgba(0, 212, 255, 0.1)"
-                    : "transparent",
-                display: "flex",
-                justifyContent: "space-between",
-                gap: "8px",
-              }}
-              onMouseEnter={(e) => {
-                if (i !== playlistIndex)
-                  e.currentTarget.style.background =
-                    "rgba(0, 212, 255, 0.05)";
-              }}
-              onMouseLeave={(e) => {
-                if (i !== playlistIndex)
-                  e.currentTarget.style.background = "transparent";
-              }}
-            >
-              <span>
-                {i === playlistIndex && playing ? "♫ " : ""}
-                {t.title}
-              </span>
-              <span style={{ opacity: 0.5 }}>{t.artist}</span>
-            </div>
-          ))}
-          <div
-            style={{
-              padding: "4px 12px",
-              fontSize: "10px",
-              color: "#444",
-              borderTop: "1px solid rgba(0, 212, 255, 0.1)",
-              marginTop: "4px",
-            }}
-          >
-            {playlist.length} tracks · Shuffled playlist · Royalty-free via Pixabay
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  // Invisible — just the audio element, no UI
+  return <audio ref={audioRef} src={track.src} preload="auto" />;
 }

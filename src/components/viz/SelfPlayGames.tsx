@@ -15,6 +15,8 @@ interface GameDef {
   component: React.FC;
   elo: number;
   eloTarget: number;
+  /** If true, this item should take up the full viewport when displayed */
+  isFullArea?: boolean;
 }
 
 const GAMES: GameDef[] = [
@@ -24,9 +26,9 @@ const GAMES: GameDef[] = [
   { component: ChessPanel, elo: 1300, eloTarget: 3200 },
   { component: BackgammonPanel, elo: 1250, eloTarget: 2900 },
   { component: GoPanel, elo: 1180, eloTarget: 3100 },
-  { component: () => <InfocomPanel gameIndex={0} />, elo: 1050, eloTarget: 2400 },
-  { component: () => <InfocomPanel gameIndex={1} />, elo: 1020, eloTarget: 2300 },
-  { component: () => <InfocomPanel gameIndex={2} />, elo: 1080, eloTarget: 2500 },
+  { component: () => <InfocomPanel gameIndex={0} />, elo: 1050, eloTarget: 2400, isFullArea: true },
+  { component: () => <InfocomPanel gameIndex={1} />, elo: 1020, eloTarget: 2300, isFullArea: true },
+  { component: () => <InfocomPanel gameIndex={2} />, elo: 1080, eloTarget: 2500, isFullArea: true },
 ];
 
 // Total items = GAMES + CCC embed
@@ -72,13 +74,24 @@ export function SelfPlayGames() {
   const isCCC = currentIndex === CCC_INDEX;
   const game = !isCCC ? GAMES[currentIndex] : null;
   const Comp = game ? game.component : null;
+  const isFullArea = game?.isFullArea ?? false;
   const pct = game
     ? ((elos[currentIndex] - game.elo) / (game.eloTarget - game.elo)) * 100
     : 0;
 
-  return (
-    <div
-      style={{
+  // When text adventure (full area) is showing, expand to cover most of the screen
+  const containerStyle: React.CSSProperties = isFullArea
+    ? {
+        position: "absolute",
+        top: "5%",
+        left: "5%",
+        width: "90%",
+        height: "85%",
+        zIndex: 40,
+        display: "flex",
+        flexDirection: "column",
+      }
+    : {
         position: "absolute",
         bottom: "2%",
         left: "1%",
@@ -87,6 +100,14 @@ export function SelfPlayGames() {
         zIndex: 30,
         display: "flex",
         flexDirection: "column",
+      };
+
+  return (
+    <div
+      style={{
+        ...containerStyle,
+        opacity: fading ? 0 : 1,
+        transition: "opacity 0.6s ease, top 0.8s ease, left 0.8s ease, width 0.8s ease, height 0.8s ease",
       }}
     >
       {/* Header - no orienting labels, just subtle status indicators */}
@@ -103,7 +124,7 @@ export function SelfPlayGames() {
       >
         <span
           style={{
-            fontSize: "11px",
+            fontSize: isFullArea ? "14px" : "11px",
             color: VEC,
             animation: "blink-status 2s steps(1) infinite",
           }}
@@ -112,7 +133,7 @@ export function SelfPlayGames() {
         </span>
         <span
           style={{
-            fontSize: "11px",
+            fontSize: isFullArea ? "14px" : "11px",
             color: "#555",
             fontFamily: "'Courier New', monospace",
             fontVariantNumeric: "tabular-nums",
@@ -132,8 +153,6 @@ export function SelfPlayGames() {
           background: "rgba(0,0,0,0.65)",
           overflow: "hidden",
           position: "relative",
-          opacity: fading ? 0 : 1,
-          transition: "opacity 0.6s ease",
         }}
       >
         {isCCC ? (
@@ -168,7 +187,7 @@ export function SelfPlayGames() {
             >
               <span
                 style={{
-                  fontSize: "13px",
+                  fontSize: isFullArea ? "16px" : "13px",
                   color: VEC_DIM,
                   fontVariantNumeric: "tabular-nums",
                   fontFamily: "'Courier New', monospace",
@@ -178,7 +197,7 @@ export function SelfPlayGames() {
               </span>
               <span
                 style={{
-                  fontSize: "12px",
+                  fontSize: isFullArea ? "14px" : "12px",
                   color: "#444",
                   fontFamily: "'Courier New', monospace",
                 }}

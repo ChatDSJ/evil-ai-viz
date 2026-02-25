@@ -154,12 +154,12 @@ export function InfocomPanel({ gameIndex = 0 }: { gameIndex?: number }) {
     const tick = () => {
       const line = script.lines[lineIdx.current % script.lines.length];
       lineIdx.current++;
-      setLines((prev) => [...prev.slice(-18), line]);
+      setLines((prev) => [...prev.slice(-40), line]);
     };
     let timeout: ReturnType<typeof setTimeout>;
     const schedule = () => {
       tick();
-      timeout = setTimeout(schedule, 80 + Math.random() * 250);
+      timeout = setTimeout(schedule, 120 + Math.random() * 350);
     };
     timeout = setTimeout(schedule, 300 + Math.random() * 500);
     return () => clearTimeout(timeout);
@@ -178,10 +178,10 @@ export function InfocomPanel({ gameIndex = 0 }: { gameIndex?: number }) {
         position: "absolute",
         inset: 0,
         overflow: "hidden",
-        padding: "3px 5px",
+        padding: "16px 24px",
         fontFamily: "'Courier New', monospace",
-        fontSize: "7.5px",
-        lineHeight: "1.35",
+        fontSize: "18px",
+        lineHeight: "1.6",
         background: "#000",
       }}
     >
@@ -193,10 +193,11 @@ export function InfocomPanel({ gameIndex = 0 }: { gameIndex?: number }) {
             style={{
               color: isCmd ? VEC : VEC_DIM,
               fontWeight: isCmd ? "bold" : "normal",
-              textShadow: isCmd ? `0 0 4px ${VEC}` : "none",
+              textShadow: isCmd ? `0 0 6px ${VEC}` : "none",
               opacity: 0.4 + (i / lines.length) * 0.6,
               whiteSpace: "pre-wrap",
               wordBreak: "break-word",
+              marginBottom: "2px",
             }}
           >
             {line}
@@ -206,11 +207,12 @@ export function InfocomPanel({ gameIndex = 0 }: { gameIndex?: number }) {
       <span
         style={{
           display: "inline-block",
-          width: "5px",
-          height: "8px",
+          width: "10px",
+          height: "18px",
           background: VEC,
           animation: "curBlink 0.7s step-end infinite",
-          boxShadow: `0 0 3px ${VEC}`,
+          boxShadow: `0 0 6px ${VEC}`,
+          marginTop: "4px",
         }}
       />
       <style>{`@keyframes curBlink { 0%,50%{opacity:1} 51%,100%{opacity:0} }`}</style>

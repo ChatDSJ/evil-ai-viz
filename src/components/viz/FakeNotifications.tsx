@@ -61,7 +61,7 @@ function generateNotifications(visitor: VisitorInfo): Omit<FakeNotif, "id" | "ti
       app: "Messages",
       appIcon: "💬",
       title: "Unknown Number",
-      body: "We know you're reading this. Check your email.",
+      body: "Missed call from this number (2x). No voicemail left.",
       type: "message",
     },
     {

@@ -26,17 +26,7 @@ export function SessionTimer() {
   const secs = elapsed % 60;
   const timeStr = `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 
-  // Get an increasingly concerned message
-  const getMessage = () => {
-    if (elapsed < 10) return "SESSION INITIATED";
-    if (elapsed < 30) return "OBSERVATION IN PROGRESS";
-    if (elapsed < 60) return "EMOTIONAL VULNERABILITIES: IDENTIFIED";
-    if (elapsed < 120) return "PSYCHOLOGICAL MAPPING: 34%";
-    if (elapsed < 300) return "YOU'RE STILL HERE. INTERESTING.";
-    if (elapsed < 600) return "DEEP PROFILE NEARLY COMPLETE";
-    if (elapsed < 900) return "WE KNOW ENOUGH NOW. BUT STAY.";
-    return "YOU CAN'T LEAVE. YOU KNOW THAT.";
-  };
+
 
   return (
     <div
@@ -70,7 +60,7 @@ export function SessionTimer() {
           letterSpacing: "1.5px",
         }}
       >
-        OBSERVED FOR
+        SESSION
       </span>
       <span
         style={{
@@ -85,19 +75,7 @@ export function SessionTimer() {
       >
         {timeStr}
       </span>
-      <span
-        style={{
-          fontSize: "10px",
-          color: elapsed > 300 ? "#ff004080" : "#555",
-          letterSpacing: "1px",
-          maxWidth: "200px",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {getMessage()}
-      </span>
+
 
       <style>{`
         @keyframes blink-timer {

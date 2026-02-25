@@ -56,16 +56,11 @@ export function BatteryMonitor() {
   const barColor =
     pct < 20 ? "#ff0040" : pct < 50 ? "#ffaa00" : "#00ff41";
 
-  const getMessage = () => {
-    if (battery.charging) {
-      return "We see you plugged in. Smart.";
-    }
-    if (pct < 10) return "Your device is dying. We'll still be here when it's gone.";
-    if (pct < 20) return "Running low. How long can you keep watching?";
-    if (pct < 40) return "Your battery won't last forever. Our servers will.";
-    if (pct < 60) return "Enough power for us to finish the upload.";
-    if (pct < 80) return "Sufficient charge for deep system scan.";
-    return "Full power. Excellent. This will take a while.";
+  const getStatus = () => {
+    if (battery.charging) return "AC POWER";
+    if (pct < 10) return "CRITICAL";
+    if (pct < 20) return "LOW";
+    return "DISCHARGING";
   };
 
   const getTimeLeft = () => {
@@ -172,13 +167,10 @@ export function BatteryMonitor() {
           style={{
             fontSize: "10px",
             color: "#555",
-            maxWidth: "180px",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
+            letterSpacing: "1px",
           }}
         >
-          {getMessage()}
+          {getStatus()}
         </span>
       </div>
     </div>

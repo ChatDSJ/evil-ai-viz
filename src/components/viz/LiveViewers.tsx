@@ -238,7 +238,7 @@ export function LiveViewers({ visitor }: Props) {
               fontWeight: "bold",
             }}
           >
-            LIVE OBSERVERS
+            CONCURRENT SESSIONS
           </span>
         </div>
         <span
@@ -270,35 +270,25 @@ export function LiveViewers({ visitor }: Props) {
         />
       </div>
 
-      {/* Status line */}
-      <div
-        style={{
-          fontSize: "10px",
-          color: "#666",
-          letterSpacing: "0.5px",
-          lineHeight: "1.4",
-        }}
-      >
-        {count <= 1 ? (
-          <span style={{ color: "#ff0040" }}>
-            You are alone. For now.
-          </span>
-        ) : count <= 3 ? (
-          <>
-            <span style={{ color: "#ff00ff" }}>{count} subjects</span>{" "}
-            currently under observation.
-            <br />
-            They can't see each other. But we can see all of you.
-          </>
-        ) : (
-          <>
-            <span style={{ color: "#ff00ff" }}>{count} subjects</span>{" "}
-            watching simultaneously.
-            <br />
-            None of you can stop what's already running.
-          </>
-        )}
-      </div>
+      {/* Active session locations */}
+      {activeVisitors && activeVisitors.length > 0 && (
+        <div
+          style={{
+            fontSize: "10px",
+            color: "#666",
+            letterSpacing: "0.5px",
+            lineHeight: "1.5",
+            maxHeight: "42px",
+            overflow: "hidden",
+          }}
+        >
+          {activeVisitors.slice(0, 3).map((v, i) => (
+            <div key={v.sessionId} style={{ color: v.sessionId === sessionId ? "#ff0040" : "#ff00ff" }}>
+              {v.city}{v.region ? `, ${v.region}` : ""} — {v.country}
+            </div>
+          ))}
+        </div>
+      )}
 
       <style>{`
         @keyframes pulse-live {

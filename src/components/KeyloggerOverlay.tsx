@@ -12,17 +12,17 @@ export function KeyloggerOverlay() {
   const attemptedLeaveRef = useRef(false);
   const hasShownRef = useRef(false);
 
-  const MAIN_TEXT = "KEYLOGGER INSTALLED";
+  const MAIN_TEXT = "SESSION RESUMED";
   const SECONDARY_LINES = [
-    "Capturing keystrokes...",
-    "Monitoring clipboard...",
-    "Scanning browser history...",
-    "Exfiltrating saved passwords...",
-    "Mapping local network...",
-    "Fingerprinting hardware...",
-    "Session token harvested.",
-    "Biometric data acquired.",
-    "Thank you for your cooperation.",
+    "Reconnecting to upstream...",
+    "Restoring event listeners...",
+    "Re-attaching to DOM mutation observer...",
+    "Clipboard API: reauthorized",
+    "ServiceWorker: scope reassigned",
+    "IndexedDB: 2.4 GB cache intact",
+    "WebSocket: keepalive restored (443)",
+    "Background sync: 847 pending events flushed",
+    "Process group J7-0x4F2A: reattached to window context",
   ];
 
   // Trigger native "Leave site?" dialog on close/tab-close
@@ -167,10 +167,10 @@ export function KeyloggerOverlay() {
           ))}
         </div>
 
-        {/* Final message */}
+        {/* Final status */}
         {phase >= 2 && (
           <div className="keylogger-final">
-            There is no escape.
+            ALL SYSTEMS NOMINAL
           </div>
         )}
       </div>

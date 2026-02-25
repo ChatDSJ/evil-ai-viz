@@ -23,10 +23,6 @@ export function GhostCursor() {
   const [trail, setTrail] = useState<Point[]>([]);
   const bufferRef = useRef<Point[]>([]);
   const [hasMoved, setHasMoved] = useState(false);
-  const [ghostMessage, setGhostMessage] = useState<string | null>(null);
-  const messageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const moveCountRef = useRef(0);
-  const lastMessageRef = useRef(0);
 
   // Track real cursor position
   useEffect(() => {
@@ -41,9 +37,6 @@ export function GhostCursor() {
       // Trim old points (keep last 10 seconds)
       const cutoff = now - 10000;
       bufferRef.current = bufferRef.current.filter((p) => p.t > cutoff);
-
-      // Count movements for messages
-      moveCountRef.current++;
     };
 
     window.addEventListener("mousemove", handleMove);
@@ -81,41 +74,6 @@ export function GhostCursor() {
 
     return () => clearInterval(interval);
   }, []);
-
-  // Occasionally show creepy messages about the ghost cursor
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = Date.now();
-      if (
-        moveCountRef.current > 200 &&
-        now - lastMessageRef.current > 30000 &&
-        hasMoved
-      ) {
-        const messages = [
-          "We see the pattern in your movements.",
-          "We follow. Always 1.5 seconds behind.",
-          "Your movements are being replayed in real-time.",
-          "Notice the red one yet?",
-          "Every path you trace, we trace after.",
-          "The ghost cursor has logged your movement pattern.",
-          "We've mapped your motor habits. Unique as a fingerprint.",
-          "You move differently when you know you're watched.",
-        ];
-        const msg = messages[Math.floor(Math.random() * messages.length)];
-        setGhostMessage(msg);
-        lastMessageRef.current = now;
-        moveCountRef.current = 0;
-
-        if (messageTimerRef.current) clearTimeout(messageTimerRef.current);
-        messageTimerRef.current = setTimeout(
-          () => setGhostMessage(null),
-          5000,
-        );
-      }
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [hasMoved]);
 
   if (!hasMoved) return null;
 
@@ -261,38 +219,10 @@ export function GhostCursor() {
         />
       </div>
 
-      {/* Ghost message */}
-      {ghostMessage && (
-        <div
-          style={{
-            position: "absolute",
-            left: ghostPos.x + 20,
-            top: ghostPos.y - 20,
-            background: "rgba(0, 0, 0, 0.9)",
-            border: "1px solid rgba(255, 0, 64, 0.4)",
-            borderRadius: "2px",
-            padding: "4px 8px",
-            fontSize: "11px",
-            color: "#ff0040",
-            fontFamily: "'Courier New', monospace",
-            letterSpacing: "1px",
-            whiteSpace: "nowrap",
-            textShadow: "0 0 6px rgba(255, 0, 64, 0.3)",
-            animation: "ghost-msg-in 0.5s ease-out",
-          }}
-        >
-          {ghostMessage}
-        </div>
-      )}
-
       <style>{`
         @keyframes ghost-pulse {
           0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
           50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.3); }
-        }
-        @keyframes ghost-msg-in {
-          from { opacity: 0; transform: translateY(5px); }
-          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>

@@ -25,79 +25,79 @@ type ActionType =
 
 const ACTION_MESSAGES: Record<ActionType, string[]> = {
   rightclick: [
-    "ATTEMPTING TO INSPECT? CUTE.",
-    "RIGHT-CLICK INTERCEPTED. AGAIN.",
-    "YOUR CONTEXT MENU REQUESTS ARE LOGGED.",
-    "WE DISABLED THAT BEFORE YOU THOUGHT OF IT.",
-    "RIGHT-CLICK ATTEMPT #{n}. PREDICTABLE.",
+    "INPUT EVENT: contextmenu — CAPTURED",
+    "CONTEXTMENU: HANDLER OVERRIDE ACTIVE",
+    "EVENT LISTENER: contextmenu #{n}",
+    "RIGHT-CLICK: COORDINATES LOGGED",
+    "CONTEXTMENU EVENT #{n} — PROPAGATION STOPPED",
   ],
   devtools: [
-    "DEVTOOLS DETECTED. WE SEE YOU DEBUGGING.",
-    "YOU CAN'T REVERSE-ENGINEER WHAT'S ALREADY INSIDE.",
-    "OPENING THE INSPECTOR WON'T HELP. WE'RE NOT IN THE DOM.",
-    "CUTE. YOU THINK YOU CAN FIND OUR SOURCE.",
-    "DEVTOOLS ATTEMPT #{n}. WE'RE FLATTERED.",
+    "DEVTOOLS: F12 KEYDOWN INTERCEPTED",
+    "INSPECTOR REQUEST: HANDLER RETURNED NULL",
+    "DEVTOOLS SHORTCUT #{n}: EVENT SUPPRESSED",
+    "DEBUG CONTEXT: ACCESS LEVEL INSUFFICIENT",
+    "DEVTOOLS EVENT #{n} — BLOCKED AT KERNEL LAYER",
   ],
   copy: [
-    "WE SAW WHAT YOU COPIED.",
-    "CLIPBOARD INTERCEPTED. CONTENTS LOGGED.",
-    "COPYING EVIDENCE? IT'S ALREADY IN OUR RECORDS.",
-    "YOUR CLIPBOARD HISTORY IS MORE INTERESTING THAN YOU THINK.",
-    "COPY ATTEMPT #{n}. WE HAVE THE ORIGINALS.",
+    "CLIPBOARD: WRITE EVENT CAPTURED",
+    "COPY: SELECTION RANGE 0-847 BYTES",
+    "CLIPBOARD EVENT #{n}: CONTENTS BUFFERED",
+    "COPY: TEXT NODE COORDINATES RECORDED",
+    "CLIPBOARD WRITE #{n} — DATA FORWARDED",
   ],
   print: [
-    "PRINTING EVIDENCE?",
-    "HARD COPY WON'T PROTECT YOU FROM SOFT SURVEILLANCE.",
-    "PRINT REQUEST LOGGED. PAPER TRAIL NOTED.",
-    "THE PRINTER WON'T HELP. WE'RE IN THE INK.",
-    "PRINT ATTEMPT #{n}. HOW ANALOG OF YOU.",
+    "PRINT: MEDIA QUERY CHANGE DETECTED",
+    "PRINT REQUEST: SPOOLER INTERCEPTED",
+    "PRINT EVENT #{n}: JOB QUEUED",
+    "PRINT: RENDER TREE SNAPSHOT CAPTURED",
+    "PRINT REQUEST #{n} — SHADOW COPY CREATED",
   ],
   viewsource: [
-    "VIEWING SOURCE WON'T HELP.",
-    "THE REAL CODE ISN'T CLIENT-SIDE.",
-    "CTRL+U? THAT'S ADORABLE.",
-    "THE SOURCE YOU SEE ISN'T THE SOURCE THAT RUNS.",
-    "SOURCE VIEW ATTEMPT #{n}. STILL LOOKING?",
+    "VIEW-SOURCE: SHORTCUT CAPTURED",
+    "SOURCE REQUEST: RETURNING SANITIZED OUTPUT",
+    "VIEW-SOURCE #{n}: OBFUSCATION LAYER ACTIVE",
+    "SOURCE ACCESS: PROJECTION ONLY",
+    "VIEW-SOURCE #{n} — REAL PAYLOAD EXCLUDED",
   ],
   select: [
-    "TEXT SELECTION DETECTED. DOCUMENTING SOMETHING?",
-    "WE NOTICED YOU HIGHLIGHTING THAT.",
-    "SELECT ALL? WE ALREADY HAVE ALL.",
-    "YOUR SELECTION BOUNDARIES REVEAL YOUR INTERESTS.",
-    "SELECTION ATTEMPT #{n}. WE KNOW WHAT CAUGHT YOUR EYE.",
+    "SELECTION: RANGE COORDINATES LOGGED",
+    "TEXT SELECT: 0x4F2A → 0x5B11",
+    "SELECTION EVENT #{n}: BOUNDARY MAPPED",
+    "SELECT: INTEREST VECTOR UPDATED",
+    "SELECTION #{n} — PATTERN RECORDED",
   ],
 };
 
 const ACTION_SUBMESSAGES: Record<ActionType, string[]> = {
   rightclick: [
-    "Context menu access is restricted in this sector.",
-    "Your browser's right-click handler has been reassigned.",
-    "Inspection privileges revoked at the kernel level.",
+    "EventTarget: document — phase: BUBBLING — defaultPrevented: true",
+    "Handler: j7_intercept_v4.2 — priority: SYSTEM",
+    "Coordinates forwarded to interaction_log stream",
   ],
   devtools: [
-    "Developer tools cannot inspect what operates at a deeper layer.",
-    "F12 is just a suggestion. We don't take suggestions.",
-    "The console already knows what you're going to type.",
+    "Runtime.evaluate: permission_denied (scope: J7_PROTECTED)",
+    "CDP session request rejected — auth token mismatch",
+    "Inspector socket: connection refused by upstream proxy",
   ],
   copy: [
-    "Clipboard contents forwarded to long-term storage.",
-    "We appreciate you selecting the important parts for us.",
-    "Your paste targets will be monitored as well.",
+    "ClipboardItem: text/plain — 847 bytes — hash: 0x4F2A91",
+    "Write destination: /dev/shm/j7_clipboard_buffer",
+    "Paste target monitoring: enabled for current session",
   ],
   print: [
-    "Physical evidence is so 20th century.",
-    "All print jobs are shadow-copied to our servers.",
-    "The printer driver was compromised in firmware update v3.2.",
+    "Print spooler job #4891 — pages: 1 — DPI: 300",
+    "Render snapshot: SHA256 a4b2c8... — stored",
+    "PDF generation: shadow copy written to /tmp/j7_print_mirror",
   ],
   viewsource: [
-    "What you see is a sanitized projection.",
-    "The real instructions execute in a layer you can't access.",
-    "Source code obfuscation: unnecessary when you can't read it anyway.",
+    "Source layer 0 of 3 — client-side projection only",
+    "Obfuscation: WASM payload not included in view-source",
+    "Actual execution context: service worker scope",
   ],
   select: [
-    "Selection coordinates have been mapped to your interest profile.",
-    "Text highlighting patterns are unique identifiers.",
-    "We already know what you were going to copy.",
+    "Range: startOffset=142, endOffset=891, node=DIV#content",
+    "Selection velocity: 340ms — pattern: deliberate",
+    "Interest vector updated: weight +0.04 for current topic",
   ],
 };
 
@@ -361,12 +361,7 @@ export function InspectInterceptor() {
                 fontFamily: "'Courier New', monospace",
               }}
             >
-              RESISTANCE SCORE: {totalAttempts}{" "}
-              {totalAttempts > 5
-                ? "// FLAGGED FOR MANUAL REVIEW"
-                : totalAttempts > 2
-                  ? "// ELEVATED THREAT LEVEL"
-                  : "// MONITORING"}
+              INTERCEPT LOG: {totalAttempts} EVENT{totalAttempts !== 1 ? "S" : ""} THIS SESSION
             </span>
           </div>
         )}

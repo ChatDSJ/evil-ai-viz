@@ -20,13 +20,7 @@ import { useEffect, useState, useRef } from "react";
  * that operates below conscious perception but creates unease.
  */
 
-const MESSAGES = [
-  { time: 300, text: "CHROMATIC SHIFT: ACTIVE", opacity: 0.15, duration: 8000 },
-  { time: 600, text: "You haven't noticed the color change yet, have you?", opacity: 0.4, duration: 10000 },
-  { time: 900, text: "We just reset it. Did you see?", opacity: 0.5, duration: 8000 },
-  { time: 1200, text: "We can change what you see. Slowly. Imperceptibly.", opacity: 0.5, duration: 12000 },
-  { time: 1800, text: "It's been shifting this entire time. You can't trust your eyes.", opacity: 0.6, duration: 15000 },
-];
+
 
 function getRedIntensity(elapsed: number): number {
   if (elapsed < 60) return 0;
@@ -57,13 +51,9 @@ function getRedIntensity(elapsed: number): number {
 
 export function SlowCreep() {
   const [elapsed, setElapsed] = useState(0);
-  const [currentMessage, setCurrentMessage] = useState<string | null>(null);
-  const [messageOpacity, setMessageOpacity] = useState(0);
   const [flashBlack, setFlashBlack] = useState(false);
   const [breathPhase, setBreathPhase] = useState(0);
   const startRef = useRef(Date.now());
-  const shownMessages = useRef(new Set<number>());
-  const messageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Timer
   useEffect(() => {
@@ -82,28 +72,13 @@ export function SlowCreep() {
     return () => clearInterval(interval);
   }, []);
 
-  // Message triggers
+  // At 900s, briefly snap back to black then continue (disorienting)
+  const hasFlashedRef = useRef(false);
   useEffect(() => {
-    for (const msg of MESSAGES) {
-      if (elapsed >= msg.time && !shownMessages.current.has(msg.time)) {
-        shownMessages.current.add(msg.time);
-
-        // At 900s, do the flash-black trick
-        if (msg.time === 900) {
-          setFlashBlack(true);
-          setTimeout(() => setFlashBlack(false), 150);
-        }
-
-        // Show message
-        setCurrentMessage(msg.text);
-        setMessageOpacity(msg.opacity);
-
-        if (messageTimerRef.current) clearTimeout(messageTimerRef.current);
-        messageTimerRef.current = setTimeout(() => {
-          setCurrentMessage(null);
-          setMessageOpacity(0);
-        }, msg.duration);
-      }
+    if (elapsed >= 900 && !hasFlashedRef.current) {
+      hasFlashedRef.current = true;
+      setFlashBlack(true);
+      setTimeout(() => setFlashBlack(false), 150);
     }
   }, [elapsed]);
 
@@ -149,28 +124,6 @@ export function SlowCreep() {
           transition: "background 2s linear",
         }}
       />
-
-      {/* Corner annotation messages */}
-      {currentMessage && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: "60px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            fontSize: elapsed < 600 ? "6px" : "8px",
-            fontFamily: "'Courier New', monospace",
-            color: `rgba(255, 0, 64, ${messageOpacity})`,
-            letterSpacing: elapsed < 600 ? "3px" : "1.5px",
-            textAlign: "center",
-            animation: "creep-msg-in 2s ease-out",
-            textShadow: `0 0 10px rgba(255, 0, 64, ${messageOpacity * 0.3})`,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {currentMessage}
-        </div>
-      )}
 
       {/* Tiny status indicator (only visible after the shift has started) */}
       {elapsed > 120 && (

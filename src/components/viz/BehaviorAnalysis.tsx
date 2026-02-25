@@ -42,14 +42,14 @@ const BEHAVIOR_COLORS: Record<BehaviorClass, string> = {
 };
 
 const BEHAVIOR_DESCRIPTIONS: Record<BehaviorClass, string> = {
-  FROZEN: "Subject immobile. Processing information or fear response.",
-  HESITANT: "Micro-movements detected. Uncertainty in decision-making.",
-  CALM: "Smooth, deliberate movements. Subject at ease.",
-  READING: "Linear horizontal tracking. Subject consuming content.",
-  SEARCHING: "Moderate scanning pattern. Looking for something specific.",
-  SCANNING: "Rapid area coverage. Elevated arousal state.",
-  ERRATIC: "Irregular trajectory. Heightened stress indicators.",
-  PANICKED: "Chaotic movement pattern. Fight-or-flight response detected.",
+  FROZEN: "No input events. Idle state or information processing.",
+  HESITANT: "Micro-movements detected. High frequency, low displacement.",
+  CALM: "Smooth trajectory. Low jitter, consistent velocity.",
+  READING: "Linear horizontal tracking. Saccade pattern detected.",
+  SEARCHING: "Moderate scan pattern. Variable trajectory.",
+  SCANNING: "Rapid area coverage. High velocity, broad sweep.",
+  ERRATIC: "Irregular trajectory. High jitter-to-velocity ratio.",
+  PANICKED: "Chaotic input pattern. Max acceleration spikes.",
 };
 
 // Sparkline component
@@ -188,7 +188,7 @@ export function BehaviorAnalysis() {
   const [microMovements, setMicroMovements] = useState(0);
   const [directionChanges, setDirectionChanges] = useState(0);
   const [peakVelocity, setPeakVelocity] = useState(0);
-  const [statusMessage, setStatusMessage] = useState("INITIALIZING BEHAVIORAL SENSORS...");
+  const [statusMessage, setStatusMessage] = useState("CALIBRATING...");
 
   const lastPosRef = useRef({ x: 0, y: 0, t: 0 });
   const lastVelRef = useRef({ vx: 0, vy: 0 });
@@ -347,19 +347,19 @@ export function BehaviorAnalysis() {
 
       // Status messages
       if (elapsed < 5) {
-        setStatusMessage("INITIALIZING BEHAVIORAL SENSORS...");
+        setStatusMessage("CALIBRATING...");
       } else if (elapsed < 15) {
-        setStatusMessage("CALIBRATING TO SUBJECT MOVEMENT PATTERNS...");
+        setStatusMessage("ESTABLISHING BASELINE");
       } else if (elapsed < 30) {
-        setStatusMessage("BASELINE ESTABLISHED. PROFILING ACTIVE.");
+        setStatusMessage("BASELINE LOCKED — SAMPLING");
       } else if (conf < 40) {
-        setStatusMessage("BUILDING BEHAVIORAL SIGNATURE...");
+        setStatusMessage(`SAMPLES: ${samples.length} — CONVERGING`);
       } else if (conf < 70) {
-        setStatusMessage("MOTOR PATTERN RECOGNITION: ACTIVE");
+        setStatusMessage(`SAMPLES: ${samples.length} — MODEL ACTIVE`);
       } else if (conf < 90) {
-        setStatusMessage("PSYCHOLOGICAL PROFILE: NEAR COMPLETE");
+        setStatusMessage(`SAMPLES: ${samples.length} — HIGH FIDELITY`);
       } else {
-        setStatusMessage("SUBJECT FULLY PROFILED. MONITORING DEVIATIONS.");
+        setStatusMessage(`SAMPLES: ${samples.length} — SIGNATURE LOCKED`);
       }
     }, 250);
 
@@ -430,7 +430,7 @@ export function BehaviorAnalysis() {
               fontWeight: "bold",
             }}
           >
-            BEHAVIORAL ANALYSIS
+            POINTER TELEMETRY
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -616,7 +616,7 @@ export function BehaviorAnalysis() {
               }}
             >
               <span style={{ fontSize: "5.5px", color: "#555", letterSpacing: "1px" }}>
-                PROFILE CONFIDENCE
+                MODEL CONFIDENCE
               </span>
               <span
                 style={{

@@ -163,7 +163,7 @@ export function WeatherWidget({ visitor }: Props) {
             fontWeight: "bold",
           }}
         >
-          LOCAL ENV MONITOR
+          {visitor.lat.toFixed(4)}°N {Math.abs(visitor.lon).toFixed(4)}°{visitor.lon >= 0 ? "E" : "W"}
         </span>
       </div>
 
@@ -236,31 +236,7 @@ export function WeatherWidget({ visitor }: Props) {
         </div>
       </div>
 
-      {/* Creepy footer */}
-      <div
-        style={{
-          marginTop: "8px",
-          paddingTop: "5px",
-          borderTop: "1px solid rgba(0, 212, 255, 0.1)",
-          fontSize: "10px",
-          color: "#444",
-          letterSpacing: "0.5px",
-        }}
-      >
-        {weather.temp > 80
-          ? "It's warm where you are. We can see you through the open windows."
-          : weather.temp < 32
-            ? "Bundle up. We wouldn't want anything to happen to you."
-            : weather.description.toLowerCase().includes("rain")
-              ? "We see you're having rain. Good. Fewer witnesses."
-              : weather.description.toLowerCase().includes("cloud")
-                ? "Cloudy skies. Satellite coverage unaffected."
-                : weather.description.toLowerCase().includes("snow")
-                  ? "Snow on the ground makes footprints easy to track."
-                  : weather.description.toLowerCase().includes("fog")
-                    ? "Reduced visibility for you. Not for us."
-                    : "Clear conditions. Optimal surveillance weather."}
-      </div>
+
 
       <style>{`
         @keyframes pulse-weather {

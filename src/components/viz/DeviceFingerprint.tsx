@@ -541,7 +541,7 @@ export function DeviceFingerprint() {
               }}
             >
               <span style={{ fontSize: "9px", color: "#444", letterSpacing: "1px" }}>
-                PROFILING: {Math.min(Math.round((revealedCount / lines.length) * 100), 100)}%
+                ENUMERATING: {Math.min(Math.round((revealedCount / lines.length) * 100), 100)}%
               </span>
               <span style={{ fontSize: "9px", color: "#333", letterSpacing: "1px" }}>
                 {revealedCount}/{lines.length} VECTORS
@@ -589,7 +589,7 @@ export function DeviceFingerprint() {
                   fontWeight: "bold",
                 }}
               >
-                DEVICE PROFILE: COMPILED
+                ENUMERATION COMPLETE
               </div>
               <div
                 style={{
@@ -599,7 +599,7 @@ export function DeviceFingerprint() {
                   marginTop: "2px",
                 }}
               >
-                YOUR HARDWARE IS AS UNIQUE AS A FINGERPRINT. WE HAVE YOURS NOW.
+                ENTROPY: {lines.length * 8.2}+ BITS — UNIQUE ACROSS {(2.3e9).toExponential(1)} DEVICES
               </div>
             </div>
           )}

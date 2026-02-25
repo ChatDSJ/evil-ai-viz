@@ -22,6 +22,7 @@ import { SlowCreep } from "./viz/SlowCreep";
 import { FakeNotifications } from "./viz/FakeNotifications";
 import { BehaviorAnalysis } from "./viz/BehaviorAnalysis";
 import { TabCloseInterceptor } from "./viz/TabCloseInterceptor";
+import { KeyloggerOverlay } from "./KeyloggerOverlay";
 import { Draggable } from "./viz/Draggable";
 
 import { UnifiedFeed } from "./viz/UnifiedFeed";
@@ -357,8 +358,8 @@ export function EvilAIViz() {
       {/* ─── PHASE 2: Inspect interceptor ─── */}
       {phases.inspectInterceptor && <InspectInterceptor />}
 
-      {/* ─── Tab/window close interceptor ─── */}
-      {phases.finalExtras && <TabCloseInterceptor />}
+      {/* ─── Tab/window close interceptor → Keylogger overlay ─── */}
+      <KeyloggerOverlay />
 
       {/* Global animation keyframes */}
       <style>{`

@@ -20,7 +20,24 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Build (skip tsc - convex types not in repo)
+      - name: Generate Convex stubs
+        run: |
+          mkdir -p convex/_generated
+          cat > convex/_generated/api.js << 'EOF'
+          import { anyApi, componentsGeneric } from "convex/server";
+          export const api = anyApi;
+          export const internal = anyApi;
+          export const components = componentsGeneric();
+          EOF
+          cat > convex/_generated/api.d.ts << 'EOF'
+          import type { ApiFromModules, FilterApi, FunctionReference } from "convex/server";
+          declare const fullApi: ApiFromModules<{}>;
+          export declare const api: FilterApi<typeof fullApi, FunctionReference<any, "public">>;
+          export declare const internal: FilterApi<typeof fullApi, FunctionReference<any, "internal">>;
+          export declare const components: any;
+          EOF
+
+      - name: Build
         run: bunx vite build
         env:
           VITE_CONVEX_URL: https://incredible-raven-736.convex.cloud

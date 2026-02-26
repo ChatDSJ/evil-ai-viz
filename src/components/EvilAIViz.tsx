@@ -14,7 +14,7 @@ import { UserLocationMap } from "./viz/UserLocationMap";
 import { FakeOSDialog } from "./viz/FakeOSDialog";
 import { VisitorInfoBar } from "./viz/VisitorInfoBar";
 import { RadarSweep } from "./viz/RadarSweep";
-import { TabAwayDetector } from "./viz/TabAwayDetector";
+
 import { GhostCursor } from "./viz/GhostCursor";
 import { InspectInterceptor } from "./viz/InspectInterceptor";
 import { DeviceFingerprint } from "./viz/DeviceFingerprint";
@@ -22,12 +22,13 @@ import { SlowCreep } from "./viz/SlowCreep";
 import { FakeNotifications } from "./viz/FakeNotifications";
 import { BehaviorAnalysis } from "./viz/BehaviorAnalysis";
 import { TabCloseInterceptor } from "./viz/TabCloseInterceptor";
-import { KeyloggerOverlay } from "./KeyloggerOverlay";
 import { Draggable } from "./viz/Draggable";
 
 import { UnifiedFeed } from "./viz/UnifiedFeed";
 import { SelfPlayGames } from "./viz/SelfPlayGames";
 import { MySpaceConversations } from "./viz/MySpaceConversations";
+import { MouseHeatmap } from "./viz/MouseHeatmap";
+import { PrintReport } from "./viz/PrintReport";
 
 /**
  * Progressive reveal phases — each 20 seconds apart after boot completes.
@@ -146,6 +147,8 @@ export function EvilAIViz() {
       deviceFingerprint: phase >= 6,
       fakeNotifications: phase >= 7,
       behaviorAnalysis: phase >= 5,
+      mouseHeatmap: phase >= 3,
+      printReport: phase >= 1,
     }),
     [phase],
   );
@@ -341,10 +344,6 @@ export function EvilAIViz() {
 
       {/* ─── PHASE 8: All remaining extras ─── */}
       <Reveal show={phases.finalExtras} duration={2000}>
-        <TabAwayDetector />
-      </Reveal>
-
-      <Reveal show={phases.finalExtras} duration={2000}>
         <GlitchOverlay />
       </Reveal>
 
@@ -352,14 +351,20 @@ export function EvilAIViz() {
         <FakeOSDialog visitor={visitor} delay={15000} />
       )}
 
+      {/* ─── PHASE 3: Mouse movement heatmap (silent accumulation) ─── */}
+      {phases.mouseHeatmap && <MouseHeatmap />}
+
+      {/* ─── Print surveillance report (activates on print) ─── */}
+      {phases.printReport && visitor.loaded && <PrintReport visitor={visitor} />}
+
       {/* ─── PHASE 1: Ghost cursor ─── */}
       {phases.ghostCursor && <GhostCursor />}
 
       {/* ─── PHASE 2: Inspect interceptor ─── */}
       {phases.inspectInterceptor && <InspectInterceptor />}
 
-      {/* ─── Tab/window close interceptor → Keylogger overlay ─── */}
-      <KeyloggerOverlay />
+      {/* ─── Tab/window close interceptor ─── */}
+      {phases.finalExtras && <TabCloseInterceptor />}
 
       {/* Global animation keyframes */}
       <style>{`

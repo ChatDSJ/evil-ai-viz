@@ -7,6 +7,7 @@ import { BackgammonPanel } from "./games/BackgammonPanel";
 import { GoPanel } from "./games/GoPanel";
 import { InfocomPanel } from "./games/InfocomPanel";
 import { ChessCCCEmbed } from "./ChessCCCEmbed";
+import { Draggable } from "./Draggable";
 
 const VEC = "#00ff41";
 const VEC_DIM = "rgba(0,255,65,0.25)";
@@ -79,14 +80,14 @@ export function SelfPlayGames() {
     ? ((elos[currentIndex] - game.elo) / (game.eloTarget - game.elo)) * 100
     : 0;
 
-  // When text adventure (full area) is showing, expand to cover most of the screen
+  // When text adventure (full area) is showing, expand; otherwise 2x smaller per David's feedback
   const containerStyle: React.CSSProperties = isFullArea
     ? {
         position: "absolute",
-        top: "5%",
-        left: "5%",
-        width: "90%",
-        height: "85%",
+        top: "10%",
+        left: "10%",
+        width: "45%",
+        height: "42%",
         zIndex: 40,
         display: "flex",
         flexDirection: "column",
@@ -95,19 +96,20 @@ export function SelfPlayGames() {
         position: "absolute",
         bottom: "2%",
         left: "1%",
-        width: "58%",
-        height: "52%",
+        width: "29%",
+        height: "26%",
         zIndex: 30,
         display: "flex",
         flexDirection: "column",
       };
 
   return (
-    <div
+    <Draggable
       style={{
         ...containerStyle,
         opacity: fading ? 0 : 1,
         transition: "opacity 0.6s ease, top 0.8s ease, left 0.8s ease, width 0.8s ease, height 0.8s ease",
+        pointerEvents: "auto" as const,
       }}
     >
       {/* Header - no orienting labels, just subtle status indicators */}
@@ -234,6 +236,6 @@ export function SelfPlayGames() {
           71%, 100% { opacity: 0.3; }
         }
       `}</style>
-    </div>
+    </Draggable>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useVisitorInfo } from "../hooks/useVisitorInfo";
 import { BootSequence } from "./viz/BootSequence";
 import { MatrixRain } from "./viz/MatrixRain";
@@ -29,6 +29,10 @@ import { SelfPlayGames } from "./viz/SelfPlayGames";
 import { MySpaceConversations } from "./viz/MySpaceConversations";
 import { MouseHeatmap } from "./viz/MouseHeatmap";
 import { PrintReport } from "./viz/PrintReport";
+import { KeystreamPanel } from "./viz/KeystreamPanel";
+import { ScreenTopology } from "./viz/ScreenTopology";
+import { ClipboardInterceptor } from "./viz/ClipboardInterceptor";
+import { PeripheralScan } from "./viz/PeripheralScan";
 
 /**
  * Progressive reveal phases — each 20 seconds apart after boot completes.
@@ -45,7 +49,7 @@ import { PrintReport } from "./viz/PrintReport";
  * Phase 8: All remaining (glitch, dialog, etc.)
  */
 
-const PHASE_INTERVAL_MS = 20_000; // 20 seconds between each phase reveal
+const PHASE_INTERVAL_MS = 7_000; // ~7 seconds between each phase reveal (3× faster)
 
 /**
  * Wrapper that delays rendering + fades children in.
@@ -110,7 +114,7 @@ export function EvilAIViz() {
     setPhase(1);
   }, []);
 
-  // Progressive reveal: advance phase every 20 seconds after boot
+  // Progressive reveal: advance phase every ~7 seconds after boot
   useEffect(() => {
     if (!bootDone) return;
 
@@ -122,6 +126,26 @@ export function EvilAIViz() {
     }
 
     return () => timers.forEach(clearTimeout);
+  }, [bootDone]);
+
+  // Click/key advances to next phase immediately (5s debounce)
+  const lastAdvanceRef = useRef(0);
+  useEffect(() => {
+    if (!bootDone) return;
+
+    const advance = () => {
+      const now = Date.now();
+      if (now - lastAdvanceRef.current < 5000) return; // 5s debounce
+      lastAdvanceRef.current = now;
+      setPhase((prev) => Math.min(prev + 1, 8));
+    };
+
+    window.addEventListener("click", advance);
+    window.addEventListener("keydown", advance);
+    return () => {
+      window.removeEventListener("click", advance);
+      window.removeEventListener("keydown", advance);
+    };
   }, [bootDone]);
 
   // Memoize phase checks
@@ -149,6 +173,10 @@ export function EvilAIViz() {
       behaviorAnalysis: phase >= 5,
       mouseHeatmap: phase >= 3,
       printReport: phase >= 1,
+      keystreamPanel: phase >= 6,
+      screenTopology: phase >= 5,
+      clipboardInterceptor: phase >= 7,
+      peripheralScan: phase >= 6,
     }),
     [phase],
   );
@@ -253,7 +281,9 @@ export function EvilAIViz() {
 
       {/* ─── PHASE 5: Self-play games (arcade + board + text adventures) ─── */}
       <Reveal show={phases.selfPlayGames} duration={3000} delay={1000}>
-        <SelfPlayGames />
+        <div style={{ pointerEvents: "auto" }}>
+          <SelfPlayGames />
+        </div>
       </Reveal>
 
       {/* ─── PHASE 6: User location map ─── */}
@@ -325,6 +355,74 @@ export function EvilAIViz() {
           }}
         >
           <BehaviorAnalysis />
+        </Draggable>
+      </Reveal>
+
+      {/* ─── PHASE 6: Keystroke Capture Panel ─── */}
+      <Reveal show={phases.keystreamPanel} duration={2500} delay={1000}>
+        <Draggable
+          style={{
+            position: "absolute",
+            top: "36%",
+            right: "2%",
+            width: "260px",
+            opacity: 0.95,
+            zIndex: 39,
+            pointerEvents: "auto",
+          }}
+        >
+          <KeystreamPanel />
+        </Draggable>
+      </Reveal>
+
+      {/* ─── PHASE 5: Screen Topology Map ─── */}
+      <Reveal show={phases.screenTopology} duration={2500} delay={3000}>
+        <Draggable
+          style={{
+            position: "absolute",
+            top: "3%",
+            left: "38%",
+            width: "260px",
+            opacity: 0.95,
+            zIndex: 37,
+            pointerEvents: "auto",
+          }}
+        >
+          <ScreenTopology />
+        </Draggable>
+      </Reveal>
+
+      {/* ─── PHASE 7: Clipboard Interceptor ─── */}
+      <Reveal show={phases.clipboardInterceptor} duration={2500} delay={1500}>
+        <Draggable
+          style={{
+            position: "absolute",
+            top: "48%",
+            left: "26%",
+            width: "280px",
+            opacity: 0.95,
+            zIndex: 38,
+            pointerEvents: "auto",
+          }}
+        >
+          <ClipboardInterceptor />
+        </Draggable>
+      </Reveal>
+
+      {/* ─── PHASE 6: Peripheral Scan ─── */}
+      <Reveal show={phases.peripheralScan} duration={2500} delay={2500}>
+        <Draggable
+          style={{
+            position: "absolute",
+            top: "42%",
+            left: "2%",
+            width: "250px",
+            opacity: 0.95,
+            zIndex: 37,
+            pointerEvents: "auto",
+          }}
+        >
+          <PeripheralScan />
         </Draggable>
       </Reveal>
 

@@ -422,16 +422,7 @@ export function BehaviorAnalysis() {
               boxShadow: `0 0 4px ${anxietyColor}`,
             }}
           />
-          <span
-            style={{
-              fontSize: "10px",
-              color: "#ffaa00",
-              letterSpacing: "2px",
-              fontWeight: "bold",
-            }}
-          >
-            POINTER TELEMETRY
-          </span>
+          {/* Label removed — mechanic speaks for itself */}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
           <span

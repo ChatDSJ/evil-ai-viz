@@ -409,16 +409,7 @@ export function DeviceFingerprint() {
               animation: revealedCount < lines.length ? "fp-scan-pulse 0.8s ease-in-out infinite" : "fp-complete-pulse 2s ease-in-out infinite",
             }}
           />
-          <span
-            style={{
-              fontSize: "10px",
-              color: "#ff0040",
-              letterSpacing: "2px",
-              fontWeight: "bold",
-            }}
-          >
-            DEVICE DOSSIER
-          </span>
+          {/* Label removed — mechanic speaks for itself */}
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>

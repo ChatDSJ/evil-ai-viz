@@ -33,6 +33,8 @@ import { KeystreamPanel } from "./viz/KeystreamPanel";
 import { ScreenTopology } from "./viz/ScreenTopology";
 import { ClipboardInterceptor } from "./viz/ClipboardInterceptor";
 import { PeripheralScan } from "./viz/PeripheralScan";
+import { PresenceTimeline } from "./viz/PresenceTimeline";
+import { TabIntelligence } from "./viz/TabIntelligence";
 
 /**
  * Progressive reveal phases — each 20 seconds apart after boot completes.
@@ -177,6 +179,8 @@ export function EvilAIViz() {
       screenTopology: phase >= 5,
       clipboardInterceptor: phase >= 7,
       peripheralScan: phase >= 6,
+      presenceTimeline: phase >= 4,
+      tabIntelligence: phase >= 2,
     }),
     [phase],
   );
@@ -426,6 +430,23 @@ export function EvilAIViz() {
         </Draggable>
       </Reveal>
 
+      {/* ─── PHASE 4: Presence Timeline ─── */}
+      <Reveal show={phases.presenceTimeline} duration={2500} delay={1500}>
+        <Draggable
+          style={{
+            position: "absolute",
+            bottom: "20%",
+            left: "28%",
+            width: "270px",
+            opacity: 0.95,
+            zIndex: 38,
+            pointerEvents: "auto",
+          }}
+        >
+          <PresenceTimeline />
+        </Draggable>
+      </Reveal>
+
       {/* ─── PHASE 7: Fake OS Notifications ─── */}
       {phases.fakeNotifications && visitor.loaded && (
         <FakeNotifications visitor={visitor} delay={5000} />
@@ -454,6 +475,9 @@ export function EvilAIViz() {
 
       {/* ─── Print surveillance report (activates on print) ─── */}
       {phases.printReport && visitor.loaded && <PrintReport visitor={visitor} />}
+
+      {/* ─── Tab Intelligence — title/favicon manipulation when tab is hidden ─── */}
+      {phases.tabIntelligence && visitor.loaded && <TabIntelligence visitor={visitor} />}
 
       {/* ─── PHASE 1: Ghost cursor ─── */}
       {phases.ghostCursor && <GhostCursor />}

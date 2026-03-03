@@ -2,6 +2,36 @@
 
 Track of all features added to make the dashboard progressively more evil.
 
+## Day 8 - Passive Surveillance (2026-03-03)
+
+### New Features:
+
+1. **Presence Timeline** — A real-time activity state monitor that tracks ACTIVE/IDLE/AWAY states across the session. Renders as a thin colored strip that builds over time:
+   - GREEN (ACTIVE) — mouse, keyboard, scroll, touch, or click events within last 8 seconds
+   - AMBER (IDLE) — page focused but no input detected for 8+ seconds
+   - DARK RED (AWAY) — tab hidden (visibilitychange API)
+   - Shows current state + duration counter, session total, percentage breakdown per state, and number of state transitions
+   - Timeline bar with minute markers and a playhead indicator
+   - Updates at 2fps via setInterval
+   - Uses: mousemove, keydown, scroll, touchstart, click, pointerdown, visibilitychange
+
+2. **Tab Intelligence** — Weaponizes the browser's own tab UI. An invisible component that manipulates `document.title` and the favicon when the user switches to another tab:
+   - When the user leaves: the page title silently rotates through their real personal data every 3 seconds — city/state, IP address, ISP, browser/OS, GPS coordinates, timezone
+   - The favicon changes to a pulsing red dot (generated via canvas at runtime, alternating bright/dim states)
+   - When the user returns: everything reverts to "AI HEADQUARTERS" and the original favicon
+   - The effect: while browsing other tabs, you glance at your tab bar and see your own city name, IP address, or ISP staring back at you
+   - Pure side-effect component — renders nothing to the DOM
+   - Uses: visibilitychange, document.title, dynamic canvas-generated favicon data URLs
+
+### Technical:
+- New component: `PresenceTimeline.tsx` — state machine tracking ACTIVE/IDLE/AWAY with segment-based timeline rendering
+- New component: `TabIntelligence.tsx` — invisible, operates via document.title and favicon link element manipulation
+- Both integrated into `EvilAIViz.tsx` — Presence Timeline at phase 4 (draggable), Tab Intelligence at phase 2
+- Presence Timeline positioned at bottom-center with Draggable wrapper
+- Tab Intelligence requires visitor data for the title rotation content
+
+---
+
 ## Day 0 - Initial Build (2026-02-21)
 - Matrix rain background
 - Fake terminal with personalized hacking commands (uses real IP, ISP, city, OS)

@@ -12,10 +12,7 @@ html, body, #root {
   font-family: 'Courier New', 'Fira Code', monospace;
 }
 
-/* Hide cursor */
-* {
-  cursor: none !important;
-}
+/* Cursor: use default (custom ghost cursor removed) */
 
 /* Prevent text selection */
 * {

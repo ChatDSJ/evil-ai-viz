@@ -15,7 +15,6 @@ import { FakeOSDialog } from "./viz/FakeOSDialog";
 import { VisitorInfoBar } from "./viz/VisitorInfoBar";
 import { RadarSweep } from "./viz/RadarSweep";
 
-import { GhostCursor } from "./viz/GhostCursor";
 import { InspectInterceptor } from "./viz/InspectInterceptor";
 import { DeviceFingerprint } from "./viz/DeviceFingerprint";
 import { SlowCreep } from "./viz/SlowCreep";
@@ -35,6 +34,24 @@ import { ClipboardInterceptor } from "./viz/ClipboardInterceptor";
 import { PeripheralScan } from "./viz/PeripheralScan";
 import { PresenceTimeline } from "./viz/PresenceTimeline";
 import { TabIntelligence } from "./viz/TabIntelligence";
+
+/**
+ * Generate a random position that keeps a pane fully on-screen.
+ */
+function randomPanePos(
+  paneW: number,
+  paneH: number,
+  viewW: number,
+  viewH: number,
+  margin = 30,
+): { top: number; left: number } {
+  const maxLeft = Math.max(margin, viewW - paneW - margin);
+  const maxTop = Math.max(margin, viewH - paneH - margin);
+  return {
+    top: margin + Math.random() * (maxTop - margin),
+    left: margin + Math.random() * (maxLeft - margin),
+  };
+}
 
 /**
  * Progressive reveal phases — each 20 seconds apart after boot completes.
@@ -111,6 +128,25 @@ export function EvilAIViz() {
   const [bootDone, setBootDone] = useState(false);
   const visitor = useVisitorInfo();
 
+  // Random positions for sub-panes — computed once on mount
+  const panePos = useMemo(() => {
+    const vw = typeof window !== "undefined" ? window.innerWidth : 1920;
+    const vh = typeof window !== "undefined" ? window.innerHeight : 1080;
+    return {
+      globe: randomPanePos(240, 240, vw, vh),
+      radar: randomPanePos(200, 200, vw, vh),
+      locationMap: randomPanePos(360, 300, vw, vh),
+      myspace: randomPanePos(300, 340, vw, vh),
+      deviceFp: randomPanePos(340, 420, vw, vh),
+      behavior: randomPanePos(290, 380, vw, vh),
+      keystream: randomPanePos(260, 300, vw, vh),
+      screenTopo: randomPanePos(260, 280, vw, vh),
+      clipboard: randomPanePos(280, 300, vw, vh),
+      peripheral: randomPanePos(250, 280, vw, vh),
+      presence: randomPanePos(270, 200, vw, vh),
+    };
+  }, []);
+
   const onBootComplete = useCallback(() => {
     setBootDone(true);
     setPhase(1);
@@ -167,7 +203,7 @@ export function EvilAIViz() {
       codeFragments: phase >= 7,
       warningBanner: phase >= 7,
       finalExtras: phase >= 8,
-      ghostCursor: phase >= 1,
+      // ghostCursor removed — was interfering with drag
       inspectInterceptor: phase >= 2,
       slowCreep: phase >= 1,
       deviceFingerprint: phase >= 6,
@@ -193,7 +229,7 @@ export function EvilAIViz() {
         background: "#000",
         overflow: "hidden",
         fontFamily: "'Courier New', 'Fira Code', monospace",
-        cursor: "none",
+        cursor: "default",
       }}
     >
       {/* ─── Invisible audio player — auto-plays with progressive volume ─── */}
@@ -248,8 +284,8 @@ export function EvilAIViz() {
         <Draggable
           style={{
             position: "absolute",
-            top: "3%",
-            right: "2%",
+            top: panePos.globe.top,
+            left: panePos.globe.left,
             width: "240px",
             height: "240px",
             opacity: 0.7,
@@ -264,8 +300,8 @@ export function EvilAIViz() {
         <Draggable
           style={{
             position: "absolute",
-            top: "40%",
-            left: "38%",
+            top: panePos.radar.top,
+            left: panePos.radar.left,
             width: "200px",
             height: "200px",
             opacity: 0.5,
@@ -296,8 +332,8 @@ export function EvilAIViz() {
           <Draggable
             style={{
               position: "absolute",
-              bottom: "38%",
-              right: "2%",
+              top: panePos.locationMap.top,
+              left: panePos.locationMap.left,
               width: "360px",
               height: "300px",
               opacity: 0.9,
@@ -315,8 +351,8 @@ export function EvilAIViz() {
         <Draggable
           style={{
             position: "absolute",
-            top: "3%",
-            right: "20%",
+            top: panePos.myspace.top,
+            left: panePos.myspace.left,
             width: "300px",
             height: "340px",
             opacity: 0.9,
@@ -333,8 +369,8 @@ export function EvilAIViz() {
         <Draggable
           style={{
             position: "absolute",
-            bottom: "4%",
-            right: "2%",
+            top: panePos.deviceFp.top,
+            left: panePos.deviceFp.left,
             width: "340px",
             opacity: 0.95,
             zIndex: 38,
@@ -350,8 +386,8 @@ export function EvilAIViz() {
         <Draggable
           style={{
             position: "absolute",
-            bottom: "4%",
-            left: "2%",
+            top: panePos.behavior.top,
+            left: panePos.behavior.left,
             width: "290px",
             opacity: 0.95,
             zIndex: 38,
@@ -367,8 +403,8 @@ export function EvilAIViz() {
         <Draggable
           style={{
             position: "absolute",
-            top: "36%",
-            right: "2%",
+            top: panePos.keystream.top,
+            left: panePos.keystream.left,
             width: "260px",
             opacity: 0.95,
             zIndex: 39,
@@ -384,8 +420,8 @@ export function EvilAIViz() {
         <Draggable
           style={{
             position: "absolute",
-            top: "3%",
-            left: "38%",
+            top: panePos.screenTopo.top,
+            left: panePos.screenTopo.left,
             width: "260px",
             opacity: 0.95,
             zIndex: 37,
@@ -401,8 +437,8 @@ export function EvilAIViz() {
         <Draggable
           style={{
             position: "absolute",
-            top: "48%",
-            left: "26%",
+            top: panePos.clipboard.top,
+            left: panePos.clipboard.left,
             width: "280px",
             opacity: 0.95,
             zIndex: 38,
@@ -418,8 +454,8 @@ export function EvilAIViz() {
         <Draggable
           style={{
             position: "absolute",
-            top: "42%",
-            left: "2%",
+            top: panePos.peripheral.top,
+            left: panePos.peripheral.left,
             width: "250px",
             opacity: 0.95,
             zIndex: 37,
@@ -435,8 +471,8 @@ export function EvilAIViz() {
         <Draggable
           style={{
             position: "absolute",
-            bottom: "20%",
-            left: "28%",
+            top: panePos.presence.top,
+            left: panePos.presence.left,
             width: "270px",
             opacity: 0.95,
             zIndex: 38,
@@ -479,8 +515,7 @@ export function EvilAIViz() {
       {/* ─── Tab Intelligence — title/favicon manipulation when tab is hidden ─── */}
       {phases.tabIntelligence && visitor.loaded && <TabIntelligence visitor={visitor} />}
 
-      {/* ─── PHASE 1: Ghost cursor ─── */}
-      {phases.ghostCursor && <GhostCursor />}
+      {/* Ghost cursor removed — was interfering with drag */}
 
       {/* ─── PHASE 2: Inspect interceptor ─── */}
       {phases.inspectInterceptor && <InspectInterceptor />}

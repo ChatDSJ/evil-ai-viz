@@ -9,10 +9,17 @@ interface DraggableProps {
   baseTransform?: string;
 }
 
+/** Shared counter so the most-recently-grabbed pane always lands on top. */
+let topZIndex = 100;
+
 /**
  * Makes any absolutely-positioned widget draggable via mouse or touch.
  * Wraps children in a div that intercepts pointer events for dragging.
  * The wrapper inherits position:absolute and passes through all style props.
+ *
+ * - stopPropagation on all pointer events so global click handlers can't interfere
+ * - Bring-to-front: every grab bumps the pane above all others
+ * - Suppresses the synthetic click that follows a drag so phase-advance etc. don't fire
  */
 export function Draggable({
   children,
@@ -25,9 +32,11 @@ export function Draggable({
     startX: number;
     startY: number;
     dragging: boolean;
+    moved: boolean; // true if the pointer moved between down and up
   } | null>(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [localZ, setLocalZ] = useState<number | undefined>(undefined);
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     const el = ref.current;
@@ -37,17 +46,24 @@ export function Draggable({
       startX: e.clientX,
       startY: e.clientY,
       dragging: true,
+      moved: false,
     };
+
+    // Bring this pane to the front
+    topZIndex += 1;
+    setLocalZ(topZIndex);
 
     setIsDragging(true);
     el.setPointerCapture(e.pointerId);
     e.preventDefault();
+    e.stopPropagation();
   }, []);
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     const state = dragState.current;
     if (!state?.dragging) return;
 
+    state.moved = true;
     setOffset((prev) => ({
       x: prev.x + (e.clientX - state.startX),
       y: prev.y + (e.clientY - state.startY),
@@ -55,6 +71,7 @@ export function Draggable({
     // Update start position for next move delta
     state.startX = e.clientX;
     state.startY = e.clientY;
+    e.stopPropagation();
   }, []);
 
   const onPointerUp = useCallback((e: React.PointerEvent) => {
@@ -66,6 +83,16 @@ export function Draggable({
     if (el) {
       el.releasePointerCapture(e.pointerId);
     }
+    e.stopPropagation();
+  }, []);
+
+  /**
+   * Suppress the click event that the browser fires after pointerup
+   * so it doesn't bubble to global handlers (e.g. phase advance).
+   */
+  const onClickCapture = useCallback((e: React.MouseEvent) => {
+    // Always stop clicks from bubbling out of a Draggable pane
+    e.stopPropagation();
   }, []);
 
   // Compose base transform with drag offset
@@ -74,8 +101,8 @@ export function Draggable({
     ? `${dragTransform} ${baseTransform}`
     : dragTransform;
 
-  // Remove transform from passed style to avoid conflict
-  const { transform: _ignored, ...restStyle } = style || {};
+  // Remove transform & zIndex from passed style to avoid conflict
+  const { transform: _ignored, zIndex: _z, ...restStyle } = style || {};
 
   return (
     <div
@@ -84,6 +111,7 @@ export function Draggable({
       style={{
         ...restStyle,
         transform: fullTransform,
+        zIndex: localZ ?? (style?.zIndex as number | undefined),
         cursor: isDragging ? "grabbing" : "grab",
         touchAction: "none",
         userSelect: "none",
@@ -92,6 +120,7 @@ export function Draggable({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
+      onClickCapture={onClickCapture}
     >
       {children}
     </div>

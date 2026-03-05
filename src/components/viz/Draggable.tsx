@@ -28,13 +28,21 @@ export function Draggable({
   baseTransform = "",
 }: DraggableProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const dragState = useRef<{
-    startX: number;
-    startY: number;
-    dragging: boolean;
-    moved: boolean; // true if the pointer moved between down and up
-  } | null>(null);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+
+  // Track current offset in both state (for rendering) and a ref (for reading
+  // inside callbacks without stale closures).
+  const [offset, setOffsetState] = useState({ x: 0, y: 0 });
+  const offsetRef = useRef({ x: 0, y: 0 });
+  function setOffset(v: { x: number; y: number }) {
+    offsetRef.current = v;
+    setOffsetState(v);
+  }
+
+  // Drag origin and offset captured at the moment the pointer goes down.
+  const dragOrigin = useRef({ x: 0, y: 0 });
+  const offsetAtDragStart = useRef({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
+
   const [isDragging, setIsDragging] = useState(false);
   const [localZ, setLocalZ] = useState<number | undefined>(undefined);
 
@@ -42,12 +50,9 @@ export function Draggable({
     const el = ref.current;
     if (!el) return;
 
-    dragState.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      dragging: true,
-      moved: false,
-    };
+    dragOrigin.current = { x: e.clientX, y: e.clientY };
+    offsetAtDragStart.current = { ...offsetRef.current };
+    isDraggingRef.current = true;
 
     // Bring this pane to the front
     topZIndex += 1;
@@ -60,29 +65,19 @@ export function Draggable({
   }, []);
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
-    const state = dragState.current;
-    if (!state?.dragging) return;
+    if (!isDraggingRef.current) return;
 
-    state.moved = true;
-    setOffset((prev) => ({
-      x: prev.x + (e.clientX - state.startX),
-      y: prev.y + (e.clientY - state.startY),
-    }));
-    // Update start position for next move delta
-    state.startX = e.clientX;
-    state.startY = e.clientY;
+    setOffset({
+      x: offsetAtDragStart.current.x + (e.clientX - dragOrigin.current.x),
+      y: offsetAtDragStart.current.y + (e.clientY - dragOrigin.current.y),
+    });
     e.stopPropagation();
   }, []);
 
   const onPointerUp = useCallback((e: React.PointerEvent) => {
-    if (dragState.current) {
-      dragState.current.dragging = false;
-    }
+    isDraggingRef.current = false;
     setIsDragging(false);
-    const el = ref.current;
-    if (el) {
-      el.releasePointerCapture(e.pointerId);
-    }
+    ref.current?.releasePointerCapture(e.pointerId);
     e.stopPropagation();
   }, []);
 

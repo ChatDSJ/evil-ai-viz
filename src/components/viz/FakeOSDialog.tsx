@@ -45,23 +45,30 @@ const MALWARE_ITEMS: string[] = [
 // ── Draggable hook ───────────────────────────────────────────────────────
 
 function useDraggable() {
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [offset, setOffsetState] = useState({ x: 0, y: 0 });
+  // Keep a ref in sync so onPointerDown can read current offset without
+  // being recreated on every move.
+  const offsetRef = useRef({ x: 0, y: 0 });
+  function setOffset(v: { x: number; y: number }) {
+    offsetRef.current = v;
+    setOffsetState(v);
+  }
+
   const dragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const offsetStart = useRef({ x: 0, y: 0 });
 
-  const onPointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      // Only drag from title bar area (first child)
-      const target = e.target as HTMLElement;
-      if (!target.closest("[data-drag-handle]")) return;
-      dragging.current = true;
-      dragStart.current = { x: e.clientX, y: e.clientY };
-      offsetStart.current = { ...offset };
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    },
-    [offset],
-  );
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    // Only drag from title bar area (first child)
+    const target = e.target as HTMLElement;
+    if (!target.closest("[data-drag-handle]")) return;
+    dragging.current = true;
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    offsetStart.current = { ...offsetRef.current };
+    // Capture on the element that owns the handler so the capture persists
+    // even when the pointer moves off a child element.
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }, []);
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     if (!dragging.current) return;

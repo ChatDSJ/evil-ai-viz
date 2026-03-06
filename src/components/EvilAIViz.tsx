@@ -1,42 +1,42 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useVisitorInfo } from "../hooks/useVisitorInfo";
-import { BootSequence } from "./viz/BootSequence";
-import { MatrixRain } from "./viz/MatrixRain";
-import { WorldMap } from "./viz/WorldMap";
-import { CodeFragments } from "./viz/CodeFragments";
-import { WireframeGlobe } from "./viz/WireframeGlobe";
-import { GlitchOverlay } from "./viz/GlitchOverlay";
-import { DataFlowLines } from "./viz/DataFlowLines";
-import { ScanLines } from "./viz/ScanLines";
-import { WarningBanner } from "./viz/WarningBanner";
+import { AudioFingerprint } from "./viz/AudioFingerprint";
 import { AudioPlayer } from "./viz/AudioPlayer";
-import { UserLocationMap } from "./viz/UserLocationMap";
-import { FakeOSDialog } from "./viz/FakeOSDialog";
-import { VisitorInfoBar } from "./viz/VisitorInfoBar";
-import { RadarSweep } from "./viz/RadarSweep";
-
-import { GhostCursor } from "./viz/GhostCursor";
-import { InspectInterceptor } from "./viz/InspectInterceptor";
-import { DeviceFingerprint } from "./viz/DeviceFingerprint";
-import { SlowCreep } from "./viz/SlowCreep";
-import { FakeNotifications } from "./viz/FakeNotifications";
 import { BehaviorAnalysis } from "./viz/BehaviorAnalysis";
-import { TabCloseInterceptor } from "./viz/TabCloseInterceptor";
-import { Draggable } from "./viz/Draggable";
-
-import { UnifiedFeed } from "./viz/UnifiedFeed";
-import { SelfPlayGames } from "./viz/SelfPlayGames";
-import { MySpaceConversations } from "./viz/MySpaceConversations";
-import { MouseHeatmap } from "./viz/MouseHeatmap";
-import { PrintReport } from "./viz/PrintReport";
-import { KeystreamPanel } from "./viz/KeystreamPanel";
-import { ScreenTopology } from "./viz/ScreenTopology";
+import { BootSequence } from "./viz/BootSequence";
 import { ClipboardInterceptor } from "./viz/ClipboardInterceptor";
+import { CodeFragments } from "./viz/CodeFragments";
+import { DataFlowLines } from "./viz/DataFlowLines";
+import { DeviceFingerprint } from "./viz/DeviceFingerprint";
+import { Draggable } from "./viz/Draggable";
+import { FakeNotifications } from "./viz/FakeNotifications";
+import { FakeOSDialog } from "./viz/FakeOSDialog";
+import { GhostCursor } from "./viz/GhostCursor";
+import { GlitchOverlay } from "./viz/GlitchOverlay";
+import { InspectInterceptor } from "./viz/InspectInterceptor";
+import { InteractionIntel } from "./viz/InteractionIntel";
+import { KeystreamPanel } from "./viz/KeystreamPanel";
+import { MatrixRain } from "./viz/MatrixRain";
+import { MouseHeatmap } from "./viz/MouseHeatmap";
+import { MouseReplay } from "./viz/MouseReplay";
+import { MySpaceConversations } from "./viz/MySpaceConversations";
 import { PeripheralScan } from "./viz/PeripheralScan";
 import { PresenceTimeline } from "./viz/PresenceTimeline";
-import { TabIntelligence } from "./viz/TabIntelligence";
-import { AudioFingerprint } from "./viz/AudioFingerprint";
+import { PrintReport } from "./viz/PrintReport";
+import { RadarSweep } from "./viz/RadarSweep";
+import { ScanLines } from "./viz/ScanLines";
+import { ScreenTopology } from "./viz/ScreenTopology";
+import { SelfPlayGames } from "./viz/SelfPlayGames";
 import { SessionMemory } from "./viz/SessionMemory";
+import { SlowCreep } from "./viz/SlowCreep";
+import { TabCloseInterceptor } from "./viz/TabCloseInterceptor";
+import { TabIntelligence } from "./viz/TabIntelligence";
+import { UnifiedFeed } from "./viz/UnifiedFeed";
+import { UserLocationMap } from "./viz/UserLocationMap";
+import { VisitorInfoBar } from "./viz/VisitorInfoBar";
+import { WarningBanner } from "./viz/WarningBanner";
+import { WireframeGlobe } from "./viz/WireframeGlobe";
+import { WorldMap } from "./viz/WorldMap";
 
 /**
  * Progressive reveal phases — each 20 seconds apart after boot completes.
@@ -109,8 +109,9 @@ function Reveal({
 }
 
 export function EvilAIViz() {
-  const [phase, setPhase] = useState(0);
-  const [bootDone, setBootDone] = useState(false);
+  const devBypass = import.meta.env.DEV;
+  const [phase, setPhase] = useState(devBypass ? 8 : 0);
+  const [bootDone, setBootDone] = useState(devBypass);
   const visitor = useVisitorInfo();
 
   const onBootComplete = useCallback(() => {
@@ -124,9 +125,7 @@ export function EvilAIViz() {
 
     const timers: ReturnType<typeof setTimeout>[] = [];
     for (let p = 2; p <= 8; p++) {
-      timers.push(
-        setTimeout(() => setPhase(p), (p - 1) * PHASE_INTERVAL_MS),
-      );
+      timers.push(setTimeout(() => setPhase(p), (p - 1) * PHASE_INTERVAL_MS));
     }
 
     return () => timers.forEach(clearTimeout);
@@ -141,7 +140,7 @@ export function EvilAIViz() {
       const now = Date.now();
       if (now - lastAdvanceRef.current < 5000) return; // 5s debounce
       lastAdvanceRef.current = now;
-      setPhase((prev) => Math.min(prev + 1, 8));
+      setPhase(prev => Math.min(prev + 1, 8));
     };
 
     window.addEventListener("click", advance);
@@ -185,6 +184,8 @@ export function EvilAIViz() {
       tabIntelligence: phase >= 2,
       audioFingerprint: phase >= 5,
       sessionMemory: phase >= 3,
+      mouseReplay: phase >= 4,
+      interactionIntel: phase >= 4,
     }),
     [phase],
   );
@@ -197,14 +198,14 @@ export function EvilAIViz() {
         background: "#000",
         overflow: "hidden",
         fontFamily: "'Courier New', 'Fira Code', monospace",
-        cursor: "none",
+        cursor: devBypass ? "auto" : "none",
       }}
     >
       {/* ─── Invisible audio player — auto-plays with progressive volume ─── */}
       <AudioPlayer />
 
       {/* ─── PHASE 0: Boot sequence (AI HEADQUARTERS prompt) ─── */}
-      <BootSequence onBootComplete={onBootComplete} />
+      {!devBypass && <BootSequence onBootComplete={onBootComplete} />}
 
       {/* ─── PHASE 1: Slow Creep (imperceptible red shift) ─── */}
       {phases.slowCreep && <SlowCreep />}
@@ -232,7 +233,9 @@ export function EvilAIViz() {
           }}
           baseTransform="translate(-50%, -50%)"
         >
-          <WorldMap />
+          <div data-viz-id="WORLD_MAP">
+            <WorldMap />
+          </div>
         </Draggable>
       </Reveal>
 
@@ -243,7 +246,9 @@ export function EvilAIViz() {
       {/* ─── PHASE 2: Unified feed (left column) ─── */}
       {phases.feed && visitor.loaded && (
         <Reveal show={true} duration={2500}>
-          <UnifiedFeed visitor={visitor} />
+          <div data-viz-id="UNIFIED_FEED">
+            <UnifiedFeed visitor={visitor} />
+          </div>
         </Reveal>
       )}
 
@@ -260,7 +265,9 @@ export function EvilAIViz() {
             pointerEvents: "auto",
           }}
         >
-          <WireframeGlobe />
+          <div data-viz-id="GLOBE">
+            <WireframeGlobe />
+          </div>
         </Draggable>
       </Reveal>
 
@@ -276,7 +283,9 @@ export function EvilAIViz() {
             pointerEvents: "auto",
           }}
         >
-          <RadarSweep />
+          <div data-viz-id="RADAR">
+            <RadarSweep />
+          </div>
         </Draggable>
       </Reveal>
 
@@ -290,27 +299,34 @@ export function EvilAIViz() {
       {/* ─── PHASE 5: Self-play games (arcade + board + text adventures) ─── */}
       <Reveal show={phases.selfPlayGames} duration={3000} delay={1000}>
         <div style={{ pointerEvents: "auto" }}>
-          <SelfPlayGames />
+          <div data-viz-id="SELF_PLAY_GAMES">
+            <SelfPlayGames />
+          </div>
         </div>
       </Reveal>
 
-      {/* ─── PHASE 6: User location map ─── */}
+      {/* ─── PHASE 6: User location map (pinned priority panel) ─── */}
       {phases.locationMap && visitor.loaded && (
         <Reveal show={true} duration={2500}>
-          <Draggable
+          <div
             style={{
               position: "absolute",
               bottom: "38%",
               right: "2%",
               width: "360px",
               height: "300px",
-              opacity: 0.9,
-              zIndex: 35,
+              opacity: 0.95,
+              zIndex: 1200,
               pointerEvents: "auto",
             }}
           >
-            <UserLocationMap visitor={visitor} />
-          </Draggable>
+            <div
+              data-viz-id="USER_LOCATION_MAP"
+              style={{ width: "100%", height: "100%" }}
+            >
+              <UserLocationMap visitor={visitor} />
+            </div>
+          </div>
         </Reveal>
       )}
 
@@ -345,7 +361,9 @@ export function EvilAIViz() {
             pointerEvents: "auto",
           }}
         >
-          <DeviceFingerprint />
+          <div data-viz-id="DEVICE_FINGERPRINT">
+            <DeviceFingerprint />
+          </div>
         </Draggable>
       </Reveal>
 
@@ -362,7 +380,9 @@ export function EvilAIViz() {
             pointerEvents: "auto",
           }}
         >
-          <BehaviorAnalysis />
+          <div data-viz-id="BEHAVIOR_ANALYSIS">
+            <BehaviorAnalysis />
+          </div>
         </Draggable>
       </Reveal>
 
@@ -379,7 +399,9 @@ export function EvilAIViz() {
             pointerEvents: "auto",
           }}
         >
-          <KeystreamPanel />
+          <div data-viz-id="KEYSTREAM_PANEL">
+            <KeystreamPanel />
+          </div>
         </Draggable>
       </Reveal>
 
@@ -396,7 +418,9 @@ export function EvilAIViz() {
             pointerEvents: "auto",
           }}
         >
-          <ScreenTopology />
+          <div data-viz-id="SCREEN_TOPOLOGY">
+            <ScreenTopology />
+          </div>
         </Draggable>
       </Reveal>
 
@@ -413,7 +437,9 @@ export function EvilAIViz() {
             pointerEvents: "auto",
           }}
         >
-          <ClipboardInterceptor />
+          <div data-viz-id="CLIPBOARD_INTERCEPTOR">
+            <ClipboardInterceptor />
+          </div>
         </Draggable>
       </Reveal>
 
@@ -430,7 +456,9 @@ export function EvilAIViz() {
             pointerEvents: "auto",
           }}
         >
-          <PeripheralScan />
+          <div data-viz-id="PERIPHERAL_SCAN">
+            <PeripheralScan />
+          </div>
         </Draggable>
       </Reveal>
 
@@ -447,7 +475,45 @@ export function EvilAIViz() {
             pointerEvents: "auto",
           }}
         >
-          <PresenceTimeline />
+          <div data-viz-id="PRESENCE_TIMELINE">
+            <PresenceTimeline />
+          </div>
+        </Draggable>
+      </Reveal>
+
+      {/* ─── PHASE 4: Cursor trajectory replay ─── */}
+      <Reveal show={phases.mouseReplay} duration={2200} delay={800}>
+        <Draggable
+          style={{
+            position: "absolute",
+            top: "4%",
+            left: "2%",
+            width: "300px",
+            opacity: 0.95,
+            zIndex: 40,
+            pointerEvents: "auto",
+          }}
+        >
+          <div data-viz-id="MOUSE_REPLAY">
+            <MouseReplay />
+          </div>
+        </Draggable>
+      </Reveal>
+
+      {/* ─── PHASE 4: Interaction intelligence feed ─── */}
+      <Reveal show={phases.interactionIntel} duration={2200} delay={1200}>
+        <Draggable
+          style={{
+            position: "absolute",
+            top: "4%",
+            left: "23%",
+            width: "320px",
+            opacity: 0.95,
+            zIndex: 40,
+            pointerEvents: "auto",
+          }}
+        >
+          <InteractionIntel />
         </Draggable>
       </Reveal>
 
@@ -464,7 +530,9 @@ export function EvilAIViz() {
             pointerEvents: "auto",
           }}
         >
-          <AudioFingerprint />
+          <div data-viz-id="AUDIO_FINGERPRINT">
+            <AudioFingerprint />
+          </div>
         </Draggable>
       </Reveal>
 
@@ -481,7 +549,9 @@ export function EvilAIViz() {
             pointerEvents: "auto",
           }}
         >
-          <SessionMemory />
+          <div data-viz-id="SESSION_MEMORY">
+            <SessionMemory />
+          </div>
         </Draggable>
       </Reveal>
 
@@ -504,18 +574,20 @@ export function EvilAIViz() {
         <GlitchOverlay />
       </Reveal>
 
-      {phases.finalExtras && (
-        <FakeOSDialog visitor={visitor} delay={15000} />
-      )}
+      {phases.finalExtras && <FakeOSDialog visitor={visitor} delay={15000} />}
 
       {/* ─── PHASE 3: Mouse movement heatmap (silent accumulation) ─── */}
       {phases.mouseHeatmap && <MouseHeatmap />}
 
       {/* ─── Print surveillance report (activates on print) ─── */}
-      {phases.printReport && visitor.loaded && <PrintReport visitor={visitor} />}
+      {phases.printReport && visitor.loaded && (
+        <PrintReport visitor={visitor} />
+      )}
 
       {/* ─── Tab Intelligence — title/favicon manipulation when tab is hidden ─── */}
-      {phases.tabIntelligence && visitor.loaded && <TabIntelligence visitor={visitor} />}
+      {phases.tabIntelligence && visitor.loaded && (
+        <TabIntelligence visitor={visitor} />
+      )}
 
       {/* ─── PHASE 1: Ghost cursor ─── */}
       {phases.ghostCursor && <GhostCursor />}

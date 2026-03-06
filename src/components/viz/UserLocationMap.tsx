@@ -1,31 +1,26 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { VisitorInfo } from "../../hooks/useVisitorInfo";
 
 interface Props {
   visitor: VisitorInfo;
 }
 
-// ═══ MapLibre GL dynamic loader (CDN) ═══
-// Bypasses Vite bundling issues with MapLibre's UMD format
 let maplibrePromise: Promise<any> | null = null;
 
 function loadMapLibre(): Promise<any> {
   if (maplibrePromise) return maplibrePromise;
 
   maplibrePromise = new Promise((resolve, reject) => {
-    // Check if already loaded
     if ((window as any).maplibregl) {
       resolve((window as any).maplibregl);
       return;
     }
 
-    // Load CSS
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = "https://unpkg.com/maplibre-gl@5.1.0/dist/maplibre-gl.css";
     document.head.appendChild(link);
 
-    // Load JS
     const script = document.createElement("script");
     script.src = "https://unpkg.com/maplibre-gl@5.1.0/dist/maplibre-gl.js";
     script.onload = () => resolve((window as any).maplibregl);
@@ -36,53 +31,9 @@ function loadMapLibre(): Promise<any> {
   return maplibrePromise;
 }
 
-// ═══ Helpers ═══
-
-function randomMetroPoint(
-  lat: number,
-  lon: number,
-  radiusKm: number,
-): { lat: number; lon: number; label: string } {
-  const angle = Math.random() * Math.PI * 2;
-  const dist = (0.3 + Math.random() * 0.7) * radiusKm;
-  const dLat = (dist / 111) * Math.cos(angle);
-  const dLon = (dist / (111 * Math.cos((lat * Math.PI) / 180))) * Math.sin(angle);
-
-  const streetNames = [
-    "OAK", "MAPLE", "CEDAR", "PINE", "ELM", "MAIN", "PARK", "LAKE",
-    "RIVER", "HILL", "VALLEY", "RIDGE", "FOREST", "MEADOW", "SUNSET",
-    "HARBOR", "UNION", "LIBERTY", "MARKET", "BROADWAY", "WILLOW",
-    "BIRCH", "CHERRY", "WALNUT", "PEARL", "GRAND", "CENTRAL", "HIGH",
-  ];
-  const suffixes = ["ST", "AVE", "BLVD", "DR", "RD", "CT", "LN", "WAY", "PL"];
-  const num = Math.floor(100 + Math.random() * 9900);
-  const street = streetNames[Math.floor(Math.random() * streetNames.length)];
-  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-
-  return {
-    lat: lat + dLat,
-    lon: lon + dLon,
-    label: `${num} ${street} ${suffix}`,
-  };
-}
-
-function easeInOutCubic(t: number): number {
-  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
-}
-
-// Phases
-const PHASE_ZOOM_IN = 0;
-const PHASE_SCAN = 1;
-const PHASE_ANALYZE = 2;
-const PHASE_ZOOM_OUT = 3;
-const PHASE_TRANSIT = 4;
-
-const CYCLE_DURATION = 10;
-
-// ═══ Dark map style — roads + buildings on black ═══
 const MAP_STYLE = {
   version: 8 as const,
-  name: "evil-scan",
+  name: "target-lock",
   sources: {
     openmaptiles: {
       type: "vector" as const,
@@ -94,22 +45,77 @@ const MAP_STYLE = {
     {
       id: "background",
       type: "background" as const,
-      paint: { "background-color": "#000000" },
+      paint: { "background-color": "#020504" },
     },
     {
       id: "water",
       type: "fill" as const,
       source: "openmaptiles",
       "source-layer": "water",
-      paint: { "fill-color": "#001a1a", "fill-opacity": 0.6 },
+      paint: { "fill-color": "#001415", "fill-opacity": 0.62 },
     },
     {
-      id: "buildings-fill",
+      id: "landuse",
+      type: "fill" as const,
+      source: "openmaptiles",
+      "source-layer": "landuse",
+      paint: { "fill-color": "#001009", "fill-opacity": 0.35 },
+    },
+    {
+      id: "roads-minor",
+      type: "line" as const,
+      source: "openmaptiles",
+      "source-layer": "transportation",
+      minzoom: 12,
+      filter: ["in", "class", "minor", "service", "track", "path"],
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": "#00ff41",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 12, 0.25, 16, 1.2],
+        "line-opacity": 0.24,
+      },
+    },
+    {
+      id: "roads-major",
+      type: "line" as const,
+      source: "openmaptiles",
+      "source-layer": "transportation",
+      filter: [
+        "in",
+        "class",
+        "tertiary",
+        "secondary",
+        "primary",
+        "trunk",
+        "motorway",
+      ],
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": "#00d4ff",
+        "line-width": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          4,
+          0.4,
+          10,
+          1.3,
+          16,
+          3.8,
+        ],
+        "line-opacity": 0.58,
+      },
+    },
+    {
+      id: "buildings",
       type: "fill" as const,
       source: "openmaptiles",
       "source-layer": "building",
       minzoom: 14,
-      paint: { "fill-color": "#001510", "fill-opacity": 0.4 },
+      paint: {
+        "fill-color": "#01120e",
+        "fill-opacity": 0.46,
+      },
     },
     {
       id: "buildings-outline",
@@ -117,155 +123,213 @@ const MAP_STYLE = {
       source: "openmaptiles",
       "source-layer": "building",
       minzoom: 14,
-      paint: { "line-color": "#00d4ff", "line-width": 0.3, "line-opacity": 0.25 },
+      paint: {
+        "line-color": "#00ff41",
+        "line-width": 0.35,
+        "line-opacity": 0.2,
+      },
     },
     {
-      id: "landuse",
-      type: "fill" as const,
+      id: "road-labels",
+      type: "symbol" as const,
       source: "openmaptiles",
-      "source-layer": "landuse",
-      paint: { "fill-color": "#001008", "fill-opacity": 0.3 },
-    },
-    // Minor roads
-    {
-      id: "roads-minor",
-      type: "line" as const,
-      source: "openmaptiles",
-      "source-layer": "transportation",
+      "source-layer": "transportation_name",
       minzoom: 13,
-      filter: ["in", "class", "minor", "service", "track", "path"],
-      layout: { "line-cap": "round", "line-join": "round" },
+      layout: {
+        "symbol-placement": "line",
+        "text-field": ["coalesce", ["get", "name:en"], ["get", "name"]],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 13, 9, 17, 12],
+        "text-letter-spacing": 0.08,
+      },
       paint: {
-        "line-color": "#00ff41",
-        "line-width": ["interpolate", ["linear"], ["zoom"], 13, 0.3, 16, 0.8, 18, 1.5],
-        "line-opacity": 0.3,
+        "text-color": "#7cecff",
+        "text-halo-color": "rgba(0, 0, 0, 0.75)",
+        "text-halo-width": 1,
+        "text-opacity": 0.62,
       },
     },
-    // Tertiary roads
     {
-      id: "roads-tertiary",
-      type: "line" as const,
+      id: "place-labels",
+      type: "symbol" as const,
       source: "openmaptiles",
-      "source-layer": "transportation",
-      filter: ["==", "class", "tertiary"],
-      layout: { "line-cap": "round", "line-join": "round" },
-      paint: {
-        "line-color": "#00ff41",
-        "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.4, 14, 1, 18, 2],
-        "line-opacity": 0.45,
+      "source-layer": "place",
+      minzoom: 8,
+      layout: {
+        "text-field": ["coalesce", ["get", "name:en"], ["get", "name"]],
+        "text-font": ["Noto Sans Bold"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          8,
+          10,
+          13,
+          12,
+          17,
+          14,
+        ],
       },
-    },
-    // Secondary roads
-    {
-      id: "roads-secondary",
-      type: "line" as const,
-      source: "openmaptiles",
-      "source-layer": "transportation",
-      filter: ["==", "class", "secondary"],
-      layout: { "line-cap": "round", "line-join": "round" },
       paint: {
-        "line-color": "#00ff41",
-        "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.5, 14, 1.5, 18, 3],
-        "line-opacity": 0.55,
-      },
-    },
-    // Primary roads — brighter
-    {
-      id: "roads-primary",
-      type: "line" as const,
-      source: "openmaptiles",
-      "source-layer": "transportation",
-      filter: ["==", "class", "primary"],
-      layout: { "line-cap": "round", "line-join": "round" },
-      paint: {
-        "line-color": "#00d4ff",
-        "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.5, 14, 2, 18, 4],
-        "line-opacity": 0.65,
-      },
-    },
-    // Highways — glow layer (underneath)
-    {
-      id: "roads-highway-glow",
-      type: "line" as const,
-      source: "openmaptiles",
-      "source-layer": "transportation",
-      filter: ["in", "class", "motorway", "trunk"],
-      layout: { "line-cap": "round", "line-join": "round" },
-      paint: {
-        "line-color": "#00d4ff",
-        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 3, 10, 6, 14, 10, 18, 15],
-        "line-opacity": 0.08,
-      },
-    },
-    // Highways — main line
-    {
-      id: "roads-highway",
-      type: "line" as const,
-      source: "openmaptiles",
-      "source-layer": "transportation",
-      filter: ["in", "class", "motorway", "trunk"],
-      layout: { "line-cap": "round", "line-join": "round" },
-      paint: {
-        "line-color": "#00d4ff",
-        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.8, 10, 2, 14, 3, 18, 5],
-        "line-opacity": 0.75,
-      },
-    },
-    // Railway
-    {
-      id: "railway",
-      type: "line" as const,
-      source: "openmaptiles",
-      "source-layer": "transportation",
-      filter: ["==", "class", "rail"],
-      paint: {
-        "line-color": "#ff6600",
-        "line-width": 0.8,
-        "line-opacity": 0.3,
-        "line-dasharray": [3, 3],
+        "text-color": "#00ff41",
+        "text-halo-color": "rgba(0, 0, 0, 0.8)",
+        "text-halo-width": 1.2,
+        "text-opacity": 0.75,
       },
     },
   ],
 };
 
-// ═══ Component ═══
+type SequenceStage = "standby" | "approach" | "lock";
+
+function clampLat(lat: number): number {
+  return Math.max(-70, Math.min(70, lat));
+}
+
+function formatLon(lon: number): string {
+  return `${Math.abs(lon).toFixed(4)}°${lon >= 0 ? "E" : "W"}`;
+}
+
+function formatLat(lat: number): string {
+  return `${Math.abs(lat).toFixed(4)}°${lat >= 0 ? "N" : "S"}`;
+}
 
 export function UserLocationMap({ visitor }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mapRef = useRef<any>(null);
+  const stageRef = useRef<SequenceStage>("standby");
+  const stageStartedAtRef = useRef(Date.now());
+
   const [mapReady, setMapReady] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
-  // Pre-generate sweep targets
-  const targetsRef = useRef<ReturnType<typeof randomMetroPoint>[]>([]);
-  if (targetsRef.current.length === 0) {
-    for (let i = 0; i < 50; i++) {
-      targetsRef.current.push(randomMetroPoint(visitor.lat, visitor.lon, 15));
-    }
-  }
-
-  // Load MapLibre + create map
   useEffect(() => {
     if (!mapContainerRef.current) return;
+
     let map: any = null;
+    let cancelled = false;
+    let stageTimeoutA: ReturnType<typeof setTimeout> | null = null;
+    let stageTimeoutB: ReturnType<typeof setTimeout> | null = null;
+
+    const setStage = (next: SequenceStage) => {
+      stageRef.current = next;
+      stageStartedAtRef.current = Date.now();
+    };
 
     loadMapLibre()
-      .then((ml) => {
-        if (!mapContainerRef.current) return;
+      .then(ml => {
+        if (!mapContainerRef.current || cancelled) return;
+
+        const target: [number, number] = [visitor.lon, visitor.lat];
+        const detachedCenter: [number, number] = [
+          visitor.lon + 26,
+          clampLat(visitor.lat + 13),
+        ];
+
         map = new ml.Map({
           container: mapContainerRef.current,
           style: MAP_STYLE,
-          center: [visitor.lon, visitor.lat],
-          zoom: 11,
+          center: detachedCenter,
+          zoom: 3,
+          bearing: 0,
+          pitch: 0,
           attributionControl: false,
           interactive: false,
           fadeDuration: 0,
-          pitchWithRotate: false,
           dragRotate: false,
+          pitchWithRotate: false,
         });
-        map.on("load", () => setMapReady(true));
+
+        map.on("load", () => {
+          if (cancelled) return;
+
+          map.addSource("target-point", {
+            type: "geojson",
+            data: {
+              type: "FeatureCollection",
+              features: [
+                {
+                  type: "Feature",
+                  geometry: {
+                    type: "Point",
+                    coordinates: target,
+                  },
+                  properties: {},
+                },
+              ],
+            },
+          });
+
+          map.addLayer({
+            id: "target-pulse",
+            type: "circle",
+            source: "target-point",
+            paint: {
+              "circle-radius": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                3,
+                2,
+                18,
+                20,
+              ],
+              "circle-color": "#ff003c",
+              "circle-opacity": 0.14,
+              "circle-blur": 0.3,
+            },
+          });
+
+          map.addLayer({
+            id: "target-core",
+            type: "circle",
+            source: "target-point",
+            paint: {
+              "circle-radius": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                3,
+                1.5,
+                18,
+                6,
+              ],
+              "circle-color": "#ff003c",
+              "circle-opacity": 0.95,
+              "circle-stroke-color": "#ffd9e1",
+              "circle-stroke-width": 1,
+            },
+          });
+
+          setMapReady(true);
+          setStage("standby");
+
+          stageTimeoutA = setTimeout(() => {
+            if (cancelled || !map) return;
+            setStage("approach");
+            map.flyTo({
+              center: target,
+              zoom: 13.5,
+              speed: 0.2,
+              curve: 1.8,
+              essential: true,
+              easing: (t: number) => t,
+            });
+          }, 1000);
+
+          stageTimeoutB = setTimeout(() => {
+            if (cancelled || !map) return;
+            setStage("lock");
+            map.easeTo({
+              center: target,
+              zoom: 17.5,
+              duration: 9000,
+              easing: (t: number) => t,
+            });
+          }, 15000);
+        });
+
         mapRef.current = map;
       })
       .catch(() => {
@@ -273,290 +337,198 @@ export function UserLocationMap({ visitor }: Props) {
       });
 
     return () => {
+      cancelled = true;
+      if (stageTimeoutA) clearTimeout(stageTimeoutA);
+      if (stageTimeoutB) clearTimeout(stageTimeoutB);
       if (map) {
         map.remove();
         mapRef.current = null;
-        setMapReady(false);
       }
+      setMapReady(false);
     };
   }, [visitor.lat, visitor.lon]);
 
-  // Animation loop
-  const animate = useCallback(() => {
-    const map = mapRef.current;
+  useEffect(() => {
+    if (!mapReady && !loadError) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d")!;
-    const startTime = Date.now();
-    const targets = targetsRef.current;
-    let prevCycleIndex = -1;
-    let animId: number;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animId = 0;
 
     const resize = () => {
-      const parent = canvas.parentElement!;
+      const parent = canvas.parentElement;
+      if (!parent) return;
       canvas.width = parent.clientWidth;
       canvas.height = parent.clientHeight;
     };
+
     resize();
     window.addEventListener("resize", resize);
 
     const draw = () => {
+      const now = Date.now();
+      const elapsedSec = (now - stageStartedAtRef.current) / 1000;
+      const map = mapRef.current;
+      const stage = stageRef.current;
+
       const w = canvas.width;
       const h = canvas.height;
-      const now = (Date.now() - startTime) / 1000;
-
-      const cycleTime = now % CYCLE_DURATION;
-      let phase: number;
-      let phaseProgress: number;
-
-      if (cycleTime < 2) {
-        phase = PHASE_ZOOM_IN;
-        phaseProgress = cycleTime / 2;
-      } else if (cycleTime < 6) {
-        phase = PHASE_SCAN;
-        phaseProgress = (cycleTime - 2) / 4;
-      } else if (cycleTime < 8) {
-        phase = PHASE_ANALYZE;
-        phaseProgress = (cycleTime - 6) / 2;
-      } else if (cycleTime < 9) {
-        phase = PHASE_ZOOM_OUT;
-        phaseProgress = (cycleTime - 8) / 1;
-      } else {
-        phase = PHASE_TRANSIT;
-        phaseProgress = (cycleTime - 9) / 1;
-      }
-
-      const cycleIndex = Math.floor(now / CYCLE_DURATION);
-      const currentTarget = cycleIndex % targets.length;
-      const target = targets[currentTarget];
-      const nextTarget = targets[(currentTarget + 1) % targets.length];
-
-      // ═══ Drive the map ═══
-      if (map) {
-        if (cycleIndex !== prevCycleIndex) {
-          prevCycleIndex = cycleIndex;
-          map.jumpTo({ center: [target.lon, target.lat], zoom: 11, bearing: 0 });
-        }
-
-        if (phase === PHASE_ZOOM_IN) {
-          const zoom = 11 + easeInOutCubic(phaseProgress) * 5;
-          map.jumpTo({ center: [target.lon, target.lat], zoom });
-        } else if (phase === PHASE_SCAN) {
-          const bearing = phaseProgress * 45;
-          map.jumpTo({ center: [target.lon, target.lat], zoom: 16, bearing });
-        } else if (phase === PHASE_ANALYZE) {
-          const pulse = 16 + Math.sin(phaseProgress * Math.PI * 3) * 0.3;
-          map.jumpTo({ center: [target.lon, target.lat], zoom: pulse, bearing: 45 });
-        } else if (phase === PHASE_ZOOM_OUT) {
-          const zoom = 16 - easeInOutCubic(phaseProgress) * 5;
-          const bearing = 45 * (1 - easeInOutCubic(phaseProgress));
-          map.jumpTo({ center: [target.lon, target.lat], zoom, bearing });
-        } else if (phase === PHASE_TRANSIT) {
-          const ease = easeInOutCubic(phaseProgress);
-          const lng = target.lon + (nextTarget.lon - target.lon) * ease;
-          const lat = target.lat + (nextTarget.lat - target.lat) * ease;
-          map.jumpTo({ center: [lng, lat], zoom: 11, bearing: 0 });
-        }
-      }
-
-      // ═══ HUD Canvas Overlay ═══
-      ctx.clearRect(0, 0, w, h);
       const cx = w / 2;
       const cy = h / 2;
 
-      // Scan sweep
-      if (phase === PHASE_SCAN) {
-        const sweepAngle = phaseProgress * Math.PI * 4;
-        const sweepRadius = Math.min(w, h) * 0.45;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, sweepRadius, sweepAngle, sweepAngle + 0.6);
-        ctx.closePath();
-        const sweepGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, sweepRadius);
-        sweepGrad.addColorStop(0, "rgba(0, 255, 65, 0.15)");
-        sweepGrad.addColorStop(1, "rgba(0, 255, 65, 0)");
-        ctx.fillStyle = sweepGrad;
-        ctx.fill();
-        const scanX = cx + Math.cos(sweepAngle) * sweepRadius;
-        const scanY = cy + Math.sin(sweepAngle) * sweepRadius;
-        ctx.strokeStyle = "rgba(0, 255, 65, 0.4)";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(scanX, scanY);
-        ctx.stroke();
+      ctx.clearRect(0, 0, w, h);
+
+      let reticleX = cx;
+      let reticleY = cy;
+      if (map && typeof map.project === "function") {
+        const projected = map.project([visitor.lon, visitor.lat]);
+        reticleX = projected.x;
+        reticleY = projected.y;
       }
 
-      // Analyze scan lines
-      if (phase === PHASE_ANALYZE) {
-        const scanLineY = (phaseProgress * h * 2) % h;
-        ctx.strokeStyle = "rgba(255, 0, 64, 0.3)";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(0, scanLineY);
-        ctx.lineTo(w, scanLineY);
-        ctx.stroke();
-        const markerAlpha = 0.3 + Math.sin(now * 6) * 0.2;
-        ctx.fillStyle = `rgba(255, 0, 64, ${markerAlpha})`;
-        for (let i = 0; i < 3; i++) {
-          const mx = cx + Math.sin(i * 2.4 + now) * 40;
-          const my = cy + Math.cos(i * 1.7 + now) * 30;
-          ctx.fillRect(mx - 2, my - 2, 4, 4);
-        }
-      }
-
-      // ═══ Target reticle ═══
-      const pulseScale = 1 + Math.sin(now * 3) * 0.1;
-      const reticleSize = (phase === PHASE_SCAN || phase === PHASE_ANALYZE ? 20 : 30) * pulseScale;
-
-      ctx.strokeStyle = "#ff0040";
-      ctx.lineWidth = 1.5;
-      ctx.shadowColor = "#ff0040";
-      ctx.shadowBlur = phase === PHASE_ANALYZE ? 15 : 8;
-
+      const pulse = 1 + Math.sin(now / 230) * 0.08;
+      const size = 18 * pulse;
       const gap = 6;
-      ctx.beginPath(); ctx.moveTo(cx, cy - reticleSize); ctx.lineTo(cx, cy - gap); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(cx, cy + gap); ctx.lineTo(cx, cy + reticleSize); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(cx - reticleSize, cy); ctx.lineTo(cx - gap, cy); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(cx + gap, cy); ctx.lineTo(cx + reticleSize, cy); ctx.stroke();
+      ctx.strokeStyle = "rgba(255, 0, 60, 0.95)";
+      ctx.lineWidth = 1.2;
+      ctx.shadowColor = "rgba(255, 0, 60, 0.7)";
+      ctx.shadowBlur = 10;
 
-      // Rotating corner brackets
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(now * 0.5);
-      const bracketSize = reticleSize + 8;
-      const bracketLen = 8;
-      ctx.lineWidth = 1;
-      for (const [dx, dy] of [[-1,-1],[1,-1],[1,1],[-1,1]]) {
-        ctx.beginPath();
-        ctx.moveTo(dx * bracketSize, dy * (bracketSize - bracketLen));
-        ctx.lineTo(dx * bracketSize, dy * bracketSize);
-        ctx.lineTo(dx * (bracketSize - bracketLen), dy * bracketSize);
-        ctx.stroke();
-      }
-      ctx.restore();
+      ctx.beginPath();
+      ctx.moveTo(reticleX, reticleY - size);
+      ctx.lineTo(reticleX, reticleY - gap);
+      ctx.moveTo(reticleX, reticleY + gap);
+      ctx.lineTo(reticleX, reticleY + size);
+      ctx.moveTo(reticleX - size, reticleY);
+      ctx.lineTo(reticleX - gap, reticleY);
+      ctx.moveTo(reticleX + gap, reticleY);
+      ctx.lineTo(reticleX + size, reticleY);
+      ctx.stroke();
 
-      ctx.beginPath(); ctx.arc(cx, cy, 2, 0, Math.PI * 2);
-      ctx.fillStyle = "#ff0040"; ctx.fill();
+      ctx.beginPath();
+      ctx.arc(reticleX, reticleY, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = "#ff003c";
+      ctx.fill();
+
+      const scanY = ((now / 15) % (h + 30)) - 15;
       ctx.shadowBlur = 0;
+      ctx.fillStyle = "rgba(0, 255, 65, 0.08)";
+      ctx.fillRect(0, scanY, w, 2);
 
-      // ═══ Status labels ═══
-      ctx.font = "bold 9px 'Courier New', monospace";
       ctx.textAlign = "center";
-      let statusText = "";
-      let statusColor = "#00ff41";
-      if (phase === PHASE_ZOOM_IN) { statusText = "▼ ACQUIRING TARGET..."; statusColor = "#ff6600"; }
-      else if (phase === PHASE_SCAN) { statusText = "◉ SCANNING PERIMETER"; statusColor = "#00ff41"; }
-      else if (phase === PHASE_ANALYZE) { statusText = `█ ANALYZING ${target.label}`; statusColor = "#ff0040"; }
-      else if (phase === PHASE_ZOOM_OUT) { statusText = "▲ SECTOR CLEAR — REPOSITIONING"; statusColor = "#00d4ff"; }
-      else { statusText = "⟫ TRANSIT TO NEXT TARGET"; statusColor = "#888"; }
-
-      ctx.fillStyle = statusColor;
-      if (phase === PHASE_ANALYZE && Math.sin(now * 8) > 0) ctx.fillStyle = "transparent";
-      ctx.fillText(statusText, cx, cy - reticleSize - 16);
-
-      if (phase >= PHASE_SCAN && phase <= PHASE_ANALYZE) {
-        ctx.font = "8px 'Courier New', monospace";
-        ctx.fillStyle = "rgba(255, 0, 64, 0.7)";
-        ctx.fillText(target.label, cx, cy + reticleSize + 20);
+      ctx.font = "bold 10px 'Courier New', monospace";
+      let headline = "TARGET ACTIVITY: STANDBY ORBIT";
+      let headlineColor = "#00d4ff";
+      if (stage === "approach") {
+        headline = "TARGET ACTIVITY: HONING IN ON SUBJECT";
+        headlineColor = "#ffaa00";
+      } else if (stage === "lock") {
+        headline = "TARGET ACTIVITY: SURVEILLANCE LOCK ESTABLISHED";
+        headlineColor = "#00ff41";
       }
+      if (stage === "lock" && Math.sin(now / 160) > 0.35) {
+        headlineColor = "#ff003c";
+      }
+      ctx.fillStyle = headlineColor;
+      ctx.fillText(headline, cx, 16);
 
-      // ═══ Info panels ═══
+      const zoom = map ? map.getZoom().toFixed(2) : "--";
+      const center = map ? map.getCenter() : null;
+      const city = visitor.city || "UNKNOWN";
+      const region = visitor.region || "UNKNOWN";
+      const isp = visitor.isp || "UNKNOWN ISP";
+
       ctx.textAlign = "left";
       ctx.font = "8px 'Courier New', monospace";
-      ctx.fillStyle = "#00ff41";
-      let infoY = 14;
-      ctx.fillText(`${visitor.lat.toFixed(4)}°N, ${Math.abs(visitor.lon).toFixed(4)}°${visitor.lon >= 0 ? "E" : "W"}`, 8, infoY);
-      infoY += 11;
-      ctx.fillStyle = "#00d4ff";
-      ctx.fillText(`${target.lat.toFixed(5)}°N, ${Math.abs(target.lon).toFixed(5)}°${target.lon >= 0 ? "E" : "W"}`, 8, infoY);
-      infoY += 11;
-      ctx.fillStyle = "#888";
-      const zoomLvl = map ? map.getZoom().toFixed(1) : "?";
-      ctx.fillText(`${(currentTarget + 1).toString().padStart(3, "0")}/${targets.length.toString().padStart(3, "0")} Z:${zoomLvl}`, 8, infoY);
+      ctx.fillStyle = "rgba(0, 255, 65, 0.9)";
+      ctx.fillText(
+        `TARGET LAT: ${formatLat(visitor.lat)}  LON: ${formatLon(visitor.lon)}`,
+        8,
+        h - 32,
+      );
+      ctx.fillText(
+        `CAMERA ZOOM: ${zoom}x   STAGE T+${elapsedSec.toFixed(1)}s`,
+        8,
+        h - 20,
+      );
+      if (center) {
+        ctx.fillStyle = "rgba(0, 212, 255, 0.75)";
+        ctx.fillText(
+          `VIEW CENTER: ${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`,
+          8,
+          h - 8,
+        );
+      }
 
-      // Bottom right
       ctx.textAlign = "right";
-      ctx.fillStyle = "rgba(0, 255, 65, 0.5)";
-      ctx.font = "8px 'Courier New', monospace";
-      const jitter = () => (Math.random() - 0.5) * 0.0001;
-      ctx.fillText(`LAT ${(target.lat + jitter()).toFixed(6)} LON ${(target.lon + jitter()).toFixed(6)}`, w - 8, h - 8);
-      ctx.fillText("RES: 0.15m/px  LOCK: CONFIRMED", w - 8, h - 20);
-      ctx.fillText(`SIGNAL: ${(85 + Math.sin(now * 2) * 10).toFixed(0)}%  ISP: ${visitor.isp.toUpperCase().slice(0, 20)}`, w - 8, h - 32);
-
-      // REC
-      if (Math.sin(now * 3) > 0) {
-        ctx.fillStyle = "#ff0040";
-        ctx.font = "bold 8px 'Courier New', monospace";
-        ctx.textAlign = "right";
-        ctx.fillText("● REC", w - 8, 16);
+      ctx.fillStyle = "rgba(0, 255, 65, 0.8)";
+      ctx.fillText(
+        `NODE: ${city.toUpperCase()} // ${region.toUpperCase()}`,
+        w - 8,
+        16,
+      );
+      ctx.fillText(`ISP: ${isp.toUpperCase().slice(0, 24)}`, w - 8, 28);
+      ctx.fillStyle = "rgba(255, 0, 60, 0.9)";
+      if (Math.sin(now / 220) > 0) {
+        ctx.fillText("REC ●", w - 8, 40);
       }
 
-      // Progress bar
-      const progress = cycleTime / CYCLE_DURATION;
-      ctx.fillStyle = "rgba(0, 255, 65, 0.08)";
+      let progress = 0.12;
+      if (stage === "approach")
+        progress = 0.12 + Math.min(elapsedSec / 14, 0.55);
+      if (stage === "lock") progress = 0.8 + Math.min(elapsedSec / 8, 0.2);
+      ctx.fillStyle = "rgba(0, 255, 65, 0.12)";
       ctx.fillRect(0, h - 3, w, 3);
-      ctx.fillStyle = phase === PHASE_ANALYZE ? "#ff0040" : "#00ff41";
+      ctx.fillStyle = stage === "lock" ? "#ff003c" : "#00ff41";
       ctx.fillRect(0, h - 3, w * progress, 3);
-
-      // Interference
-      for (let i = 0; i < 3; i++) {
-        ctx.fillStyle = `rgba(0, 255, 65, ${Math.random() * 0.2})`;
-        ctx.fillRect(Math.random() * w, Math.random() * h, 2, 2);
-      }
 
       animId = requestAnimationFrame(draw);
     };
 
     draw();
+
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", resize);
     };
-  }, [visitor]);
-
-  // Start animation when map ready (or immediately as fallback)
-  useEffect(() => {
-    if (!mapReady && !loadError) return;
-    const cleanup = animate();
-    return cleanup;
-  }, [mapReady, loadError, animate]);
+  }, [mapReady, loadError, visitor]);
 
   return (
     <div
-      ref={containerRef}
       style={{
         position: "relative",
         width: "100%",
         height: "100%",
-        border: "1px solid rgba(255, 0, 64, 0.4)",
+        border: "1px solid rgba(0, 255, 65, 0.35)",
         borderRadius: "4px",
         overflow: "hidden",
-        boxShadow: "0 0 15px rgba(255, 0, 64, 0.15)",
+        background: "#000",
+        boxShadow: "0 0 14px rgba(0, 255, 65, 0.2)",
       }}
     >
-      {/* MapLibre GL map layer */}
       <div
         ref={mapContainerRef}
         style={{
           position: "absolute",
           inset: 0,
-          opacity: 0.85,
+          opacity: 0.92,
         }}
       />
 
-      {/* Vignette overlay */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%)",
+          background:
+            "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.72) 100%)",
           pointerEvents: "none",
           zIndex: 1,
         }}
       />
 
-      {/* HUD canvas */}
       <canvas
         ref={canvasRef}
         style={{

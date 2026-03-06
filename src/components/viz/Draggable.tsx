@@ -7,6 +7,8 @@ interface DraggableProps {
   className?: string;
   /** Base transform to compose with drag offset (e.g. "translate(-50%, -50%)") */
   baseTransform?: string;
+  /** If set, this pane stays at a fixed z-index even while dragging. */
+  fixedZIndex?: number;
 }
 
 /** Shared counter so the most-recently-grabbed pane always lands on top. */
@@ -26,6 +28,7 @@ export function Draggable({
   style,
   className,
   baseTransform = "",
+  fixedZIndex,
 }: DraggableProps) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -54,9 +57,13 @@ export function Draggable({
     offsetAtDragStart.current = { ...offsetRef.current };
     isDraggingRef.current = true;
 
-    // Bring this pane to the front
-    topZIndex += 1;
-    setLocalZ(topZIndex);
+    if (fixedZIndex !== undefined) {
+      setLocalZ(fixedZIndex);
+    } else {
+      // Bring this pane to the front
+      topZIndex += 1;
+      setLocalZ(topZIndex);
+    }
 
     setIsDragging(true);
     el.setPointerCapture(e.pointerId);
@@ -106,7 +113,7 @@ export function Draggable({
       style={{
         ...restStyle,
         transform: fullTransform,
-        zIndex: localZ ?? (style?.zIndex as number | undefined),
+        zIndex: fixedZIndex ?? localZ ?? (style?.zIndex as number | undefined),
         cursor: isDragging ? "grabbing" : "grab",
         touchAction: "none",
         userSelect: "none",

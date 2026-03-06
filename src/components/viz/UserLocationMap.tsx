@@ -209,8 +209,8 @@ export function UserLocationMap({ visitor }: Props) {
 
     let map: any = null;
     let cancelled = false;
-    let stageTimeoutA: ReturnType<typeof setTimeout> | null = null;
-    let stageTimeoutB: ReturnType<typeof setTimeout> | null = null;
+    let cycleInterval: ReturnType<typeof setInterval> | null = null;
+    const scheduled: ReturnType<typeof setTimeout>[] = [];
 
     const setStage = (next: SequenceStage) => {
       stageRef.current = next;
@@ -303,31 +303,47 @@ export function UserLocationMap({ visitor }: Props) {
           });
 
           setMapReady(true);
-          setStage("standby");
-
-          stageTimeoutA = setTimeout(() => {
+          const runCycle = () => {
             if (cancelled || !map) return;
-            setStage("approach");
-            map.flyTo({
-              center: target,
-              zoom: 13.5,
-              speed: 0.2,
-              curve: 1.8,
-              essential: true,
-              easing: (t: number) => t,
+            setStage("standby");
+            map.jumpTo({
+              center: detachedCenter,
+              zoom: 3,
+              bearing: 0,
+              pitch: 0,
             });
-          }, 1000);
 
-          stageTimeoutB = setTimeout(() => {
-            if (cancelled || !map) return;
-            setStage("lock");
-            map.easeTo({
-              center: target,
-              zoom: 17.5,
-              duration: 9000,
-              easing: (t: number) => t,
-            });
-          }, 15000);
+            scheduled.push(
+              setTimeout(() => {
+                if (cancelled || !map) return;
+                setStage("approach");
+                map.flyTo({
+                  center: target,
+                  zoom: 13.5,
+                  speed: 0.2,
+                  curve: 1.8,
+                  essential: true,
+                  easing: (t: number) => t,
+                });
+              }, 1000),
+            );
+
+            scheduled.push(
+              setTimeout(() => {
+                if (cancelled || !map) return;
+                setStage("lock");
+                map.easeTo({
+                  center: target,
+                  zoom: 17.5,
+                  duration: 9000,
+                  easing: (t: number) => t,
+                });
+              }, 15000),
+            );
+          };
+
+          runCycle();
+          cycleInterval = setInterval(runCycle, 28000);
         });
 
         mapRef.current = map;
@@ -338,8 +354,8 @@ export function UserLocationMap({ visitor }: Props) {
 
     return () => {
       cancelled = true;
-      if (stageTimeoutA) clearTimeout(stageTimeoutA);
-      if (stageTimeoutB) clearTimeout(stageTimeoutB);
+      if (cycleInterval) clearInterval(cycleInterval);
+      for (const timer of scheduled) clearTimeout(timer);
       if (map) {
         map.remove();
         mapRef.current = null;

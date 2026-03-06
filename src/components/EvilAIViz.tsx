@@ -308,7 +308,8 @@ export function EvilAIViz() {
       {/* ─── PHASE 6: User location map (pinned priority panel) ─── */}
       {phases.locationMap && visitor.loaded && (
         <Reveal show={true} duration={2500}>
-          <div
+          <Draggable
+            fixedZIndex={1200}
             style={{
               position: "absolute",
               bottom: "38%",
@@ -326,7 +327,7 @@ export function EvilAIViz() {
             >
               <UserLocationMap visitor={visitor} />
             </div>
-          </div>
+          </Draggable>
         </Reveal>
       )}
 

@@ -37,6 +37,8 @@ import { PresenceTimeline } from "./viz/PresenceTimeline";
 import { TabIntelligence } from "./viz/TabIntelligence";
 import { AudioFingerprint } from "./viz/AudioFingerprint";
 import { SessionMemory } from "./viz/SessionMemory";
+import { TemporalProfiler } from "./viz/TemporalProfiler";
+import { NetworkTiming } from "./viz/NetworkTiming";
 
 /**
  * Progressive reveal phases — each 20 seconds apart after boot completes.
@@ -57,11 +59,6 @@ const PHASE_INTERVAL_MS = 7_000; // ~7 seconds between each phase reveal (3× fa
 
 /**
  * Wrapper that delays rendering + fades children in.
- *
- * Important: after the fade-in animation completes we clear the `animation`
- * CSS property.  A running/filling CSS animation creates a stacking context,
- * which would isolate the child's z-index from the rest of the page and
- * prevent Draggable's "bring-to-front" logic from working across panes.
  */
 function Reveal({
   show,
@@ -77,7 +74,6 @@ function Reveal({
   children: React.ReactNode;
 }) {
   const [shouldRender, setShouldRender] = useState(false);
-  const [animDone, setAnimDone] = useState(false);
 
   useEffect(() => {
     if (show) {
@@ -92,12 +88,8 @@ function Reveal({
     return (
       <div
         style={{
-          opacity: animDone ? 1 : undefined,
-          animation: animDone
-            ? undefined
-            : `revealFadeIn ${duration}ms ease-out forwards`,
+          animation: `revealFadeIn ${duration}ms ease-out forwards`,
         }}
-        onAnimationEnd={() => setAnimDone(true)}
       >
         {children}
       </div>
@@ -110,12 +102,8 @@ function Reveal({
         position: "absolute",
         inset: 0,
         pointerEvents: "none",
-        opacity: animDone ? 1 : undefined,
-        animation: animDone
-          ? undefined
-          : `revealFadeIn ${duration}ms ease-out forwards`,
+        animation: `revealFadeIn ${duration}ms ease-out forwards`,
       }}
-      onAnimationEnd={() => setAnimDone(true)}
     >
       {children}
     </div>
@@ -199,6 +187,8 @@ export function EvilAIViz() {
       tabIntelligence: phase >= 2,
       audioFingerprint: phase >= 5,
       sessionMemory: phase >= 3,
+      temporalProfiler: phase >= 4,
+      networkTiming: phase >= 6,
     }),
     [phase],
   );
@@ -496,6 +486,42 @@ export function EvilAIViz() {
           }}
         >
           <SessionMemory />
+        </Draggable>
+      </Reveal>
+
+      {/* ─── PHASE 4: Temporal Profiler (sun position + time awareness) ─── */}
+      {phases.temporalProfiler && visitor.loaded && (
+        <Reveal show={true} duration={2500} delay={1500}>
+          <Draggable
+            style={{
+              position: "absolute",
+              bottom: "6%",
+              left: "28%",
+              width: "240px",
+              opacity: 0.95,
+              zIndex: 38,
+              pointerEvents: "auto",
+            }}
+          >
+            <TemporalProfiler lat={visitor.lat} lon={visitor.lon} timezone={visitor.timezone} />
+          </Draggable>
+        </Reveal>
+      )}
+
+      {/* ─── PHASE 6: Network Timing Waterfall ─── */}
+      <Reveal show={phases.networkTiming} duration={2500} delay={2000}>
+        <Draggable
+          style={{
+            position: "absolute",
+            top: "18%",
+            left: "2%",
+            width: "280px",
+            opacity: 0.95,
+            zIndex: 38,
+            pointerEvents: "auto",
+          }}
+        >
+          <NetworkTiming />
         </Draggable>
       </Reveal>
 

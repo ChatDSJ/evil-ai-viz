@@ -2,6 +2,63 @@
 
 Track of all features added to make the dashboard progressively more evil.
 
+## ⚠️ PRIORITY: User Testing Feedback (from Notion backlog — address BEFORE adding new features)
+These items were flagged from David's user testing and should be prioritized:
+- [ ] **Text needs to be larger throughout** — readability issue across all panels
+- [ ] **Cycle through vector games one at a time** (not all 6 at once) — include chess.com/CCC in rotation
+- [ ] **No titles on games** — no titles, no explanations for anything (disorientation is the goal)
+- [ ] **Rain needs to be slower, and less of it** — matrix rain effect too aggressive
+- [ ] **Audio should increase 4x more slowly** — currently 60s fade, should be ~4 minutes
+- [ ] **Close-window/tab interception** — confusing AI dialog when person tries to close
+
+Notion backlog: https://www.notion.so/30f6cd9f7e47811ab8f4fc11ff63f177
+
+---
+
+## Day 9 - Hardware Fingerprinting + Persistent Memory (2026-03-05)
+
+### New Features:
+
+1. **Audio Fingerprint** — Real Web Audio API hardware fingerprinting. Creates an OfflineAudioContext (44100 Hz, 1 channel), runs a triangle-wave oscillator at 10kHz through a DynamicsCompressor (threshold: -50dB, knee: 40dB, ratio: 12:1, attack: 0, release: 0.25s), captures the rendered audio buffer, and hashes samples 4500-5000 to produce a unique hardware signature. This is a genuine fingerprinting technique used by commercial tracking services — the hash varies by audio hardware, drivers, and OS audio stack.
+
+   Displays:
+   - Sample rate, max channels, base latency, output latency
+   - Audio worklet availability
+   - Channel interpretation/routing mode
+   - Waveform visualization of the fingerprint region (with highlighted hash area)
+   - Computed audio hash (e.g., `0x6F5E1104`)
+   - Codec support probing (AAC, OPUS, VORBIS, FLAC, WAV, MP3, WEBM) via `canPlayType()`
+   - Progressive reveal: scan → hardware data → waveform + hash → codecs → completion
+   - Uses: OfflineAudioContext, OscillatorNode, DynamicsCompressorNode, `canPlayType()`
+
+2. **Session Memory** — localStorage-based persistent memory that survives browser sessions. The site *remembers* returning visitors.
+
+   First visit: Shows "NEW SUBJECT" with session counter at 1, live duration timer, and first contact timestamp. Generates a subject ID from canvas fingerprint hash.
+
+   Returning visits: Immediately shows "SUBJECT RECOGNIZED" with:
+   - Total session count (big number)
+   - Current session duration (live)
+   - Cumulative exposure time across all sessions
+   - First contact date/time
+   - Tracking duration (days since first visit)
+   - Previous session duration + how long ago
+   - Average session length
+   - Visit frequency (visits/day)
+   - Visual dot timeline of last 20 visits (current visit highlighted green)
+   - Persistent subject ID
+
+   The persistence across sessions is the unsettling part — close the tab, come back tomorrow, and it immediately recalls everything.
+   - Uses: localStorage, canvas fingerprint hash, Date/performance APIs
+
+### Technical:
+- New component: `AudioFingerprint.tsx` — OfflineAudioContext fingerprinting with waveform SVG visualization
+- New component: `SessionMemory.tsx` — localStorage persistence with visit history tracking
+- Both integrated into `EvilAIViz.tsx` — Audio Fingerprint at phase 5 (draggable), Session Memory at phase 3 (draggable)
+- Audio Fingerprint positioned center-left, Session Memory positioned upper-right area
+- Both follow collapsible panel pattern with header dot indicator
+
+---
+
 ## Day 8 - Passive Surveillance (2026-03-03)
 
 ### New Features:

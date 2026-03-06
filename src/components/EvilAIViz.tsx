@@ -57,6 +57,11 @@ const PHASE_INTERVAL_MS = 7_000; // ~7 seconds between each phase reveal (3× fa
 
 /**
  * Wrapper that delays rendering + fades children in.
+ *
+ * Important: after the fade-in animation completes we clear the `animation`
+ * CSS property.  A running/filling CSS animation creates a stacking context,
+ * which would isolate the child's z-index from the rest of the page and
+ * prevent Draggable's "bring-to-front" logic from working across panes.
  */
 function Reveal({
   show,
@@ -72,6 +77,7 @@ function Reveal({
   children: React.ReactNode;
 }) {
   const [shouldRender, setShouldRender] = useState(false);
+  const [animDone, setAnimDone] = useState(false);
 
   useEffect(() => {
     if (show) {
@@ -86,8 +92,12 @@ function Reveal({
     return (
       <div
         style={{
-          animation: `revealFadeIn ${duration}ms ease-out forwards`,
+          opacity: animDone ? 1 : undefined,
+          animation: animDone
+            ? undefined
+            : `revealFadeIn ${duration}ms ease-out forwards`,
         }}
+        onAnimationEnd={() => setAnimDone(true)}
       >
         {children}
       </div>
@@ -100,8 +110,12 @@ function Reveal({
         position: "absolute",
         inset: 0,
         pointerEvents: "none",
-        animation: `revealFadeIn ${duration}ms ease-out forwards`,
+        opacity: animDone ? 1 : undefined,
+        animation: animDone
+          ? undefined
+          : `revealFadeIn ${duration}ms ease-out forwards`,
       }}
+      onAnimationEnd={() => setAnimDone(true)}
     >
       {children}
     </div>

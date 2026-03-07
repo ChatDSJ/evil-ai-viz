@@ -58,6 +58,31 @@ import { TypingBiometric } from "./viz/TypingBiometric";
  */
 
 const PHASE_INTERVAL_MS = 7_000; // ~7 seconds between each phase reveal (3× faster)
+const ANALYSIS_CYCLE_MS = 30_000; // 30 seconds per analysis panel
+
+/**
+ * User analysis panels — surveillance/fingerprinting sub-panes.
+ * Only one is visible at a time, cycling every 30 seconds.
+ * Ordered: identity → hardware → network → location → behavior → keystrokes.
+ */
+const ANALYSIS_PANEL_IDS = [
+  'sessionMemory',
+  'deviceFingerprint',
+  'screenTopology',
+  'audioFingerprint',
+  'networkTiming',
+  'webrtcProbe',
+  'userLocationMap',
+  'temporalProfiler',
+  'peripheralScan',
+  'behaviorAnalysis',
+  'presenceTimeline',
+  'keystreamPanel',
+  'typingBiometric',
+  'clipboardInterceptor',
+] as const;
+
+type AnalysisPanelId = typeof ANALYSIS_PANEL_IDS[number];
 
 /**
  * Wrapper that delays rendering + fades children in.
@@ -197,6 +222,40 @@ export function EvilAIViz() {
     [phase],
   );
 
+  // ── Cycle through user analysis panels — one visible at a time ──
+  const [analysisIndex, setAnalysisIndex] = useState(0);
+
+  useEffect(() => {
+    if (!bootDone) return;
+    const interval = setInterval(() => {
+      setAnalysisIndex((prev) => prev + 1);
+    }, ANALYSIS_CYCLE_MS);
+    return () => clearInterval(interval);
+  }, [bootDone]);
+
+  // Only cycle through panels whose phase has been reached
+  const activeAnalysisPanel = useMemo((): AnalysisPanelId | null => {
+    const phaseGate: Record<AnalysisPanelId, boolean> = {
+      sessionMemory: phases.sessionMemory,
+      deviceFingerprint: phases.deviceFingerprint,
+      screenTopology: phases.screenTopology,
+      audioFingerprint: phases.audioFingerprint,
+      networkTiming: phases.networkTiming,
+      webrtcProbe: phases.webrtcProbe,
+      userLocationMap: phases.locationMap && visitor.loaded,
+      temporalProfiler: phases.temporalProfiler && visitor.loaded,
+      peripheralScan: phases.peripheralScan,
+      behaviorAnalysis: phases.behaviorAnalysis,
+      presenceTimeline: phases.presenceTimeline,
+      keystreamPanel: phases.keystreamPanel,
+      typingBiometric: phases.typingBiometric,
+      clipboardInterceptor: phases.clipboardInterceptor,
+    };
+    const available = ANALYSIS_PANEL_IDS.filter((id) => phaseGate[id]);
+    if (available.length === 0) return null;
+    return available[analysisIndex % available.length];
+  }, [phases, visitor.loaded, analysisIndex]);
+
   return (
     <div
       style={{
@@ -302,26 +361,6 @@ export function EvilAIViz() {
         </div>
       </Reveal>
 
-      {/* ─── PHASE 6: User location map ─── */}
-      {phases.locationMap && visitor.loaded && (
-        <Reveal show={true} duration={2500}>
-          <Draggable
-            style={{
-              position: "absolute",
-              bottom: "38%",
-              right: "2%",
-              width: "360px",
-              height: "300px",
-              opacity: 0.9,
-              zIndex: 35,
-              pointerEvents: "auto",
-            }}
-          >
-            <UserLocationMap visitor={visitor} />
-          </Draggable>
-        </Reveal>
-      )}
-
       {/* ─── MySpace Conversations ─── */}
       <Reveal show={phases.neuralNet} duration={2000} delay={800}>
         <Draggable
@@ -340,162 +379,136 @@ export function EvilAIViz() {
         </Draggable>
       </Reveal>
 
-      {/* ─── PHASE 6: Device Fingerprint Dossier ─── */}
-      <Reveal show={phases.deviceFingerprint} duration={2500} delay={1500}>
-        <Draggable
-          style={{
-            position: "absolute",
-            bottom: "4%",
-            right: "2%",
-            width: "340px",
-            opacity: 0.95,
-            zIndex: 38,
-            pointerEvents: "auto",
-          }}
-        >
-          <DeviceFingerprint />
-        </Draggable>
-      </Reveal>
+      {/* ─── USER ANALYSIS PANELS — one at a time, cycling every 30s ─── */}
+      {activeAnalysisPanel === 'sessionMemory' && (
+        <Reveal show={true} duration={1000} key="analysis-sessionMemory">
+          <Draggable
+            style={{
+              position: "absolute",
+              top: "18%",
+              right: "18%",
+              width: "260px",
+              opacity: 0.95,
+              zIndex: 40,
+              pointerEvents: "auto",
+            }}
+          >
+            <SessionMemory />
+          </Draggable>
+        </Reveal>
+      )}
 
-      {/* ─── PHASE 5: Behavioral Analysis Panel ─── */}
-      <Reveal show={phases.behaviorAnalysis} duration={2500} delay={2000}>
-        <Draggable
-          style={{
-            position: "absolute",
-            bottom: "4%",
-            left: "2%",
-            width: "290px",
-            opacity: 0.95,
-            zIndex: 38,
-            pointerEvents: "auto",
-          }}
-        >
-          <BehaviorAnalysis />
-        </Draggable>
-      </Reveal>
+      {activeAnalysisPanel === 'deviceFingerprint' && (
+        <Reveal show={true} duration={1000} key="analysis-deviceFingerprint">
+          <Draggable
+            style={{
+              position: "absolute",
+              bottom: "4%",
+              right: "2%",
+              width: "340px",
+              opacity: 0.95,
+              zIndex: 40,
+              pointerEvents: "auto",
+            }}
+          >
+            <DeviceFingerprint />
+          </Draggable>
+        </Reveal>
+      )}
 
-      {/* ─── PHASE 6: Keystroke Capture Panel ─── */}
-      <Reveal show={phases.keystreamPanel} duration={2500} delay={1000}>
-        <Draggable
-          style={{
-            position: "absolute",
-            top: "36%",
-            right: "2%",
-            width: "260px",
-            opacity: 0.95,
-            zIndex: 39,
-            pointerEvents: "auto",
-          }}
-        >
-          <KeystreamPanel />
-        </Draggable>
-      </Reveal>
+      {activeAnalysisPanel === 'screenTopology' && (
+        <Reveal show={true} duration={1000} key="analysis-screenTopology">
+          <Draggable
+            style={{
+              position: "absolute",
+              top: "3%",
+              left: "38%",
+              width: "260px",
+              opacity: 0.95,
+              zIndex: 40,
+              pointerEvents: "auto",
+            }}
+          >
+            <ScreenTopology />
+          </Draggable>
+        </Reveal>
+      )}
 
-      {/* ─── PHASE 5: Screen Topology Map ─── */}
-      <Reveal show={phases.screenTopology} duration={2500} delay={3000}>
-        <Draggable
-          style={{
-            position: "absolute",
-            top: "3%",
-            left: "38%",
-            width: "260px",
-            opacity: 0.95,
-            zIndex: 37,
-            pointerEvents: "auto",
-          }}
-        >
-          <ScreenTopology />
-        </Draggable>
-      </Reveal>
+      {activeAnalysisPanel === 'audioFingerprint' && (
+        <Reveal show={true} duration={1000} key="analysis-audioFingerprint">
+          <Draggable
+            style={{
+              position: "absolute",
+              top: "28%",
+              left: "26%",
+              width: "270px",
+              opacity: 0.95,
+              zIndex: 40,
+              pointerEvents: "auto",
+            }}
+          >
+            <AudioFingerprint />
+          </Draggable>
+        </Reveal>
+      )}
 
-      {/* ─── PHASE 7: Clipboard Interceptor ─── */}
-      <Reveal show={phases.clipboardInterceptor} duration={2500} delay={1500}>
-        <Draggable
-          style={{
-            position: "absolute",
-            top: "48%",
-            left: "26%",
-            width: "280px",
-            opacity: 0.95,
-            zIndex: 38,
-            pointerEvents: "auto",
-          }}
-        >
-          <ClipboardInterceptor />
-        </Draggable>
-      </Reveal>
+      {activeAnalysisPanel === 'networkTiming' && (
+        <Reveal show={true} duration={1000} key="analysis-networkTiming">
+          <Draggable
+            style={{
+              position: "absolute",
+              top: "18%",
+              left: "2%",
+              width: "280px",
+              opacity: 0.95,
+              zIndex: 40,
+              pointerEvents: "auto",
+            }}
+          >
+            <NetworkTiming />
+          </Draggable>
+        </Reveal>
+      )}
 
-      {/* ─── PHASE 6: Peripheral Scan ─── */}
-      <Reveal show={phases.peripheralScan} duration={2500} delay={2500}>
-        <Draggable
-          style={{
-            position: "absolute",
-            top: "42%",
-            left: "2%",
-            width: "250px",
-            opacity: 0.95,
-            zIndex: 37,
-            pointerEvents: "auto",
-          }}
-        >
-          <PeripheralScan />
-        </Draggable>
-      </Reveal>
+      {activeAnalysisPanel === 'webrtcProbe' && (
+        <Reveal show={true} duration={1000} key="analysis-webrtcProbe">
+          <Draggable
+            style={{
+              position: "absolute",
+              top: "58%",
+              right: "18%",
+              width: "280px",
+              opacity: 0.95,
+              zIndex: 40,
+              pointerEvents: "auto",
+            }}
+          >
+            <WebRTCProbe />
+          </Draggable>
+        </Reveal>
+      )}
 
-      {/* ─── PHASE 4: Presence Timeline ─── */}
-      <Reveal show={phases.presenceTimeline} duration={2500} delay={1500}>
-        <Draggable
-          style={{
-            position: "absolute",
-            bottom: "20%",
-            left: "28%",
-            width: "270px",
-            opacity: 0.95,
-            zIndex: 38,
-            pointerEvents: "auto",
-          }}
-        >
-          <PresenceTimeline />
-        </Draggable>
-      </Reveal>
+      {activeAnalysisPanel === 'userLocationMap' && (
+        <Reveal show={true} duration={1000} key="analysis-userLocationMap">
+          <Draggable
+            style={{
+              position: "absolute",
+              bottom: "38%",
+              right: "2%",
+              width: "360px",
+              height: "300px",
+              opacity: 0.9,
+              zIndex: 40,
+              pointerEvents: "auto",
+            }}
+          >
+            <UserLocationMap visitor={visitor} />
+          </Draggable>
+        </Reveal>
+      )}
 
-      {/* ─── PHASE 5: Audio Fingerprint ─── */}
-      <Reveal show={phases.audioFingerprint} duration={2500} delay={2000}>
-        <Draggable
-          style={{
-            position: "absolute",
-            top: "28%",
-            left: "26%",
-            width: "270px",
-            opacity: 0.95,
-            zIndex: 38,
-            pointerEvents: "auto",
-          }}
-        >
-          <AudioFingerprint />
-        </Draggable>
-      </Reveal>
-
-      {/* ─── PHASE 3: Session Memory (localStorage persistence) ─── */}
-      <Reveal show={phases.sessionMemory} duration={2500} delay={1500}>
-        <Draggable
-          style={{
-            position: "absolute",
-            top: "18%",
-            right: "18%",
-            width: "260px",
-            opacity: 0.95,
-            zIndex: 37,
-            pointerEvents: "auto",
-          }}
-        >
-          <SessionMemory />
-        </Draggable>
-      </Reveal>
-
-      {/* ─── PHASE 4: Temporal Profiler (sun position + time awareness) ─── */}
-      {phases.temporalProfiler && visitor.loaded && (
-        <Reveal show={true} duration={2500} delay={1500}>
+      {activeAnalysisPanel === 'temporalProfiler' && (
+        <Reveal show={true} duration={1000} key="analysis-temporalProfiler">
           <Draggable
             style={{
               position: "absolute",
@@ -503,7 +516,7 @@ export function EvilAIViz() {
               left: "28%",
               width: "240px",
               opacity: 0.95,
-              zIndex: 38,
+              zIndex: 40,
               pointerEvents: "auto",
             }}
           >
@@ -512,56 +525,113 @@ export function EvilAIViz() {
         </Reveal>
       )}
 
-      {/* ─── PHASE 6: Network Timing Waterfall ─── */}
-      <Reveal show={phases.networkTiming} duration={2500} delay={2000}>
-        <Draggable
-          style={{
-            position: "absolute",
-            top: "18%",
-            left: "2%",
-            width: "280px",
-            opacity: 0.95,
-            zIndex: 38,
-            pointerEvents: "auto",
-          }}
-        >
-          <NetworkTiming />
-        </Draggable>
-      </Reveal>
+      {activeAnalysisPanel === 'peripheralScan' && (
+        <Reveal show={true} duration={1000} key="analysis-peripheralScan">
+          <Draggable
+            style={{
+              position: "absolute",
+              top: "42%",
+              left: "2%",
+              width: "250px",
+              opacity: 0.95,
+              zIndex: 40,
+              pointerEvents: "auto",
+            }}
+          >
+            <PeripheralScan />
+          </Draggable>
+        </Reveal>
+      )}
 
-      {/* ─── PHASE 5: WebRTC Network Interface Probe ─── */}
-      <Reveal show={phases.webrtcProbe} duration={2500} delay={2500}>
-        <Draggable
-          style={{
-            position: "absolute",
-            top: "58%",
-            right: "18%",
-            width: "280px",
-            opacity: 0.95,
-            zIndex: 38,
-            pointerEvents: "auto",
-          }}
-        >
-          <WebRTCProbe />
-        </Draggable>
-      </Reveal>
+      {activeAnalysisPanel === 'behaviorAnalysis' && (
+        <Reveal show={true} duration={1000} key="analysis-behaviorAnalysis">
+          <Draggable
+            style={{
+              position: "absolute",
+              bottom: "4%",
+              left: "2%",
+              width: "290px",
+              opacity: 0.95,
+              zIndex: 40,
+              pointerEvents: "auto",
+            }}
+          >
+            <BehaviorAnalysis />
+          </Draggable>
+        </Reveal>
+      )}
 
-      {/* ─── PHASE 4: Typing Dynamics Biometric ─── */}
-      <Reveal show={phases.typingBiometric} duration={2500} delay={2000}>
-        <Draggable
-          style={{
-            position: "absolute",
-            top: "38%",
-            left: "15%",
-            width: "260px",
-            opacity: 0.95,
-            zIndex: 38,
-            pointerEvents: "auto",
-          }}
-        >
-          <TypingBiometric />
-        </Draggable>
-      </Reveal>
+      {activeAnalysisPanel === 'presenceTimeline' && (
+        <Reveal show={true} duration={1000} key="analysis-presenceTimeline">
+          <Draggable
+            style={{
+              position: "absolute",
+              bottom: "20%",
+              left: "28%",
+              width: "270px",
+              opacity: 0.95,
+              zIndex: 40,
+              pointerEvents: "auto",
+            }}
+          >
+            <PresenceTimeline />
+          </Draggable>
+        </Reveal>
+      )}
+
+      {activeAnalysisPanel === 'keystreamPanel' && (
+        <Reveal show={true} duration={1000} key="analysis-keystreamPanel">
+          <Draggable
+            style={{
+              position: "absolute",
+              top: "36%",
+              right: "2%",
+              width: "260px",
+              opacity: 0.95,
+              zIndex: 40,
+              pointerEvents: "auto",
+            }}
+          >
+            <KeystreamPanel />
+          </Draggable>
+        </Reveal>
+      )}
+
+      {activeAnalysisPanel === 'typingBiometric' && (
+        <Reveal show={true} duration={1000} key="analysis-typingBiometric">
+          <Draggable
+            style={{
+              position: "absolute",
+              top: "38%",
+              left: "15%",
+              width: "260px",
+              opacity: 0.95,
+              zIndex: 40,
+              pointerEvents: "auto",
+            }}
+          >
+            <TypingBiometric />
+          </Draggable>
+        </Reveal>
+      )}
+
+      {activeAnalysisPanel === 'clipboardInterceptor' && (
+        <Reveal show={true} duration={1000} key="analysis-clipboardInterceptor">
+          <Draggable
+            style={{
+              position: "absolute",
+              top: "48%",
+              left: "26%",
+              width: "280px",
+              opacity: 0.95,
+              zIndex: 40,
+              pointerEvents: "auto",
+            }}
+          >
+            <ClipboardInterceptor />
+          </Draggable>
+        </Reveal>
+      )}
 
       {/* ─── PHASE 7: Fake OS Notifications ─── */}
       {phases.fakeNotifications && visitor.loaded && (

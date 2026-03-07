@@ -15,6 +15,60 @@ Notion backlog: https://www.notion.so/30f6cd9f7e47811ab8f4fc11ff63f177
 
 ---
 
+## Day 10 - Temporal Intelligence + Network Forensics (2026-03-06)
+
+### New Features:
+
+1. **Temporal Profiler** — Real astronomical calculations from the user's geolocation coordinates to determine their exact solar context. Computes sun position (elevation angle, azimuth), sunrise/sunset times, solar noon, day length, and current sky phase using Julian date astronomy — no external APIs, pure math.
+
+   Displays:
+   - Local time (large, ticking) with timezone identifier
+   - Date, week number, day of week
+   - Sun arc SVG diagram showing the sun's trajectory across the sky with a dot at current position
+   - Current phase: DAYLIGHT / SUNRISE / SUNSET / CIVIL TWILIGHT / NAUTICAL TWILIGHT / ASTRONOMICAL TWILIGHT / NIGHT
+   - Solar elevation angle (how far above/below horizon)
+   - Azimuth bearing (compass direction of the sun)
+   - Precise sunrise, solar noon, sunset times
+   - Day length
+   - Countdown to next sunrise or sunset
+   - User coordinates displayed at bottom
+   - Collapsible panel with warm amber color scheme
+   - Uses: Date API, geolocation data, Julian day astronomical formulas
+
+   The unsettling part: a website silently computing whether the sun is shining on you right now.
+
+2. **Network Timing Waterfall** — Uses the Performance Navigation Timing API to display a precise waterfall of the page's network loading process. Shows each phase of the HTTP connection as colored horizontal bars:
+
+   Displays:
+   - DNS lookup duration bar
+   - TCP connection establishment bar
+   - TLS/SSL handshake bar
+   - TTFB (Time to First Byte) bar
+   - Content download bar
+   - DOM processing bar
+   - Each bar positioned and sized proportionally to actual timing
+   - Connection protocol (H2, H3, HTTP/1.1)
+   - Total page load time
+   - TTFB, DOM Ready, FCP (First Contentful Paint), LCP (Largest Contentful Paint)
+   - Resource count and total transfer size
+   - Document decoded size
+   - Redirect count
+   - Server timing entries (if any)
+   - Progressive reveal animation with pulsing scan indicator
+   - Collapsible panel with cyan/blue color scheme
+   - Uses: PerformanceNavigationTiming, PerformanceResourceTiming, PerformancePaintTiming
+
+   The unsettling part: a website casually displaying the precise timing characteristics of your network infrastructure — DNS resolution speed, TLS handshake duration, your connection protocol.
+
+### Technical:
+- New component: `TemporalProfiler.tsx` — Julian date solar position calculator with SVG sun arc visualization
+- New component: `NetworkTiming.tsx` — Performance API waterfall with stacked timing bars
+- Both integrated into `EvilAIViz.tsx` — Temporal Profiler at phase 4 (draggable), Network Timing at phase 6 (draggable)
+- Temporal Profiler positioned bottom-center, Network Timing positioned upper-left
+- Both follow collapsible panel pattern with header dot indicator
+
+---
+
 ## Day 9 - Hardware Fingerprinting + Persistent Memory (2026-03-05)
 
 ### New Features:

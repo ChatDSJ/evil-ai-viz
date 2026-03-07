@@ -39,6 +39,8 @@ import { AudioFingerprint } from "./viz/AudioFingerprint";
 import { SessionMemory } from "./viz/SessionMemory";
 import { TemporalProfiler } from "./viz/TemporalProfiler";
 import { NetworkTiming } from "./viz/NetworkTiming";
+import { WebRTCProbe } from "./viz/WebRTCProbe";
+import { TypingBiometric } from "./viz/TypingBiometric";
 
 /**
  * Progressive reveal phases — each 20 seconds apart after boot completes.
@@ -189,6 +191,8 @@ export function EvilAIViz() {
       sessionMemory: phase >= 3,
       temporalProfiler: phase >= 4,
       networkTiming: phase >= 6,
+      webrtcProbe: phase >= 5,
+      typingBiometric: phase >= 4,
     }),
     [phase],
   );
@@ -522,6 +526,40 @@ export function EvilAIViz() {
           }}
         >
           <NetworkTiming />
+        </Draggable>
+      </Reveal>
+
+      {/* ─── PHASE 5: WebRTC Network Interface Probe ─── */}
+      <Reveal show={phases.webrtcProbe} duration={2500} delay={2500}>
+        <Draggable
+          style={{
+            position: "absolute",
+            top: "58%",
+            right: "18%",
+            width: "280px",
+            opacity: 0.95,
+            zIndex: 38,
+            pointerEvents: "auto",
+          }}
+        >
+          <WebRTCProbe />
+        </Draggable>
+      </Reveal>
+
+      {/* ─── PHASE 4: Typing Dynamics Biometric ─── */}
+      <Reveal show={phases.typingBiometric} duration={2500} delay={2000}>
+        <Draggable
+          style={{
+            position: "absolute",
+            top: "38%",
+            left: "15%",
+            width: "260px",
+            opacity: 0.95,
+            zIndex: 38,
+            pointerEvents: "auto",
+          }}
+        >
+          <TypingBiometric />
         </Draggable>
       </Reveal>
 

@@ -72,7 +72,6 @@ const ANALYSIS_PANEL_IDS = [
   'audioFingerprint',
   'networkTiming',
   'webrtcProbe',
-  'userLocationMap',
   'temporalProfiler',
   'peripheralScan',
   'behaviorAnalysis',
@@ -242,7 +241,6 @@ export function EvilAIViz() {
       audioFingerprint: phases.audioFingerprint,
       networkTiming: phases.networkTiming,
       webrtcProbe: phases.webrtcProbe,
-      userLocationMap: phases.locationMap && visitor.loaded,
       temporalProfiler: phases.temporalProfiler && visitor.loaded,
       peripheralScan: phases.peripheralScan,
       behaviorAnalysis: phases.behaviorAnalysis,
@@ -379,6 +377,26 @@ export function EvilAIViz() {
         </Draggable>
       </Reveal>
 
+      {/* ─── User location map (always visible, not part of cycling) ─── */}
+      {phases.locationMap && visitor.loaded && (
+        <Reveal show={true} duration={2500}>
+          <Draggable
+            style={{
+              position: "absolute",
+              bottom: "38%",
+              right: "2%",
+              width: "360px",
+              height: "300px",
+              opacity: 0.9,
+              zIndex: 35,
+              pointerEvents: "auto",
+            }}
+          >
+            <UserLocationMap visitor={visitor} />
+          </Draggable>
+        </Reveal>
+      )}
+
       {/* ─── USER ANALYSIS PANELS — one at a time, cycling every 30s ─── */}
       {activeAnalysisPanel === 'sessionMemory' && (
         <Reveal show={true} duration={1000} key="analysis-sessionMemory">
@@ -484,25 +502,6 @@ export function EvilAIViz() {
             }}
           >
             <WebRTCProbe />
-          </Draggable>
-        </Reveal>
-      )}
-
-      {activeAnalysisPanel === 'userLocationMap' && (
-        <Reveal show={true} duration={1000} key="analysis-userLocationMap">
-          <Draggable
-            style={{
-              position: "absolute",
-              bottom: "38%",
-              right: "2%",
-              width: "360px",
-              height: "300px",
-              opacity: 0.9,
-              zIndex: 40,
-              pointerEvents: "auto",
-            }}
-          >
-            <UserLocationMap visitor={visitor} />
           </Draggable>
         </Reveal>
       )}

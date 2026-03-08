@@ -15,6 +15,52 @@ Notion backlog: https://www.notion.so/30f6cd9f7e47811ab8f4fc11ff63f177
 
 ---
 
+## Day 11 - Network Interface Leak + Typing Biometrics (2026-03-07)
+
+### New Features:
+
+1. **WebRTC Network Interface Probe** — Uses `RTCPeerConnection` with Google STUN servers to silently enumerate the user's network interfaces via ICE candidate gathering. Creates a data channel, triggers an offer/answer exchange, and captures every ICE candidate the browser generates — revealing local/private IP addresses, mDNS-obfuscated candidates, and STUN-resolved server-reflexive addresses. No permission dialog, no notification.
+
+   Displays:
+   - Each discovered candidate with IP, port, type (host/srflx/relay), and protocol
+   - Private IPs highlighted in red with subnet classification (192.168.0.0/16, 10.0.0.0/8, etc.)
+   - mDNS-obfuscated `.local` addresses shown as OBFUSCATED
+   - Public server-reflexive IPs from STUN resolution
+   - ICE gathering state progression (NEW → GATHERING → COMPLETE)
+   - Animated sweep indicator during active gathering
+   - Summary: interface count, candidate count, private/public/mDNS breakdown, protocols
+   - Collapsible panel with green color scheme
+   - Progressive reveal: candidates appear one-by-one as discovered
+   - Uses: RTCPeerConnection, ICE candidate gathering, STUN servers
+
+   The unsettling part: a website casually reading your private network addresses (192.168.x.x) without asking for any permission.
+
+2. **Typing Dynamics Biometric** — Keystroke dynamics analysis that profiles HOW the user types, not what they type. Goes far beyond the existing keystroke logger. Measures timing between keydown/keyup events to extract biometric signatures:
+
+   Displays:
+   - Real-time rhythmogram: a scrolling dual-bar chart where upper bars (warm colors) show key dwell time and lower bars (cool blue) show flight time between keys
+   - Total keystroke count and timing sample count
+   - Average dwell time (how long keys are held, in ms)
+   - Average flight time (gap between keystrokes, in ms)
+   - Words per minute (rolling 30-second window)
+   - Consistency score (coefficient of variation — higher = more rhythmic)
+   - Hand balance bar: left/right hand key usage percentage based on QWERTY layout
+   - Digraph timing: top 5 most-typed two-key sequences with average timing bars and counts
+   - Biometric hash: a unique identifier computed from statistical moments of typing rhythm
+   - Collapsible panel with warm amber color scheme
+   - Uses: keydown/keyup timing via performance.now(), statistical analysis
+
+   The unsettling part: this is a real biometric authentication technique used by banks and security firms. A website silently building a typing fingerprint that can identify you by your typing rhythm alone — independent of what you actually type.
+
+### Technical:
+- New component: `WebRTCProbe.tsx` — RTCPeerConnection ICE candidate enumeration with STUN server probing
+- New component: `TypingBiometric.tsx` — keystroke dynamics analyzer with canvas rhythmogram, digraph timing, hand dominance detection
+- Both integrated into `EvilAIViz.tsx` — WebRTC Probe at phase 5 (draggable), Typing Biometric at phase 4 (draggable)
+- WebRTC Probe positioned center-right, Typing Biometric positioned center-left
+- Both follow collapsible panel pattern with header dot indicator and progressive reveal
+
+---
+
 ## Day 10 - Temporal Intelligence + Network Forensics (2026-03-06)
 
 ### New Features:
